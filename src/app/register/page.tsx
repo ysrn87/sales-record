@@ -53,20 +53,17 @@ export default function RegisterPage() {
     }
   }
 
-  // --- Name ---
   const [name, setName] = useState('');
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value.replace(/\b\w/g, (c) => c.toUpperCase()));
   };
 
-  // --- Phone ---
   const [phone, setPhone] = useState('');
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/[^0-9+]/g, '');
     setPhone(raw.replace(/(.{4})/g, '$1 ').trim());
   };
 
-  // --- Email ---
   const [emailError, setEmailError] = useState('');
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -74,7 +71,6 @@ export default function RegisterPage() {
     setEmailError(val && !valid ? 'Masukkan alamat email yang valid' : '');
   };
 
-  // --- Birthday ---
   const [birthYear, setBirthYear] = useState('');
   const [birthMonth, setBirthMonth] = useState('');
   const [birthDay, setBirthDay] = useState('');
@@ -88,7 +84,6 @@ export default function RegisterPage() {
   const currentYear = today.getFullYear();
   const currentMonth = today.getMonth() + 1;
   const currentDay = today.getDate();
-
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
   const availableMonths = months.filter((_, i) => {
@@ -110,7 +105,6 @@ export default function RegisterPage() {
   })();
 
   const days = Array.from({ length: maxDay }, (_, i) => i + 1);
-
   const monthUnlocked = !!birthYear;
   const dayUnlocked = !!birthYear && !!birthMonth;
 
@@ -119,36 +113,33 @@ export default function RegisterPage() {
       ? `${birthYear}-${birthMonth.padStart(2, '0')}-${birthDay.padStart(2, '0')}`
       : '';
 
-  // --- Address ---
   const [address, setAddress] = useState('');
 
-  // --- Shared select className builder ---
   const selectClass = (unlocked: boolean, filled: boolean) =>
     [
       'w-full h-11 text-sm rounded-md border px-3 pr-8 appearance-none',
-      'focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200',
+      'focus:outline-none focus:ring-2 focus:ring-[#1ecbe1] transition-all duration-200',
       !unlocked
         ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
         : !filled
-        ? 'border-blue-400 bg-blue-50 text-blue-700 cursor-pointer'
+        ? 'border-[#1ecbe1] bg-[#e0f9fc] text-[#0fa8be] cursor-pointer'
         : 'border-input bg-background text-gray-700 cursor-pointer',
     ].join(' ');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 py-12">
-      {/* Decorative blobs */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#e0f9fc] via-[#f0fdfe] to-[#d6f7fa] p-4 py-12">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#1ecbe1] rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#17a8bb] rounded-full mix-blend-multiply filter blur-xl opacity-15 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#0fa8be] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000" />
       </div>
 
       <Card className="w-full max-w-md shadow-2xl border-0 relative z-10 backdrop-blur-sm bg-white/95">
         <CardHeader className="space-y-3 pb-6">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <div className="mx-auto w-16 h-16 bg-[#028697] rounded-2xl flex items-center justify-center shadow-lg">
             <Gift className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-[#028697]">
             Daftar Member
           </CardTitle>
           <CardDescription className="text-center text-sm">
@@ -158,9 +149,9 @@ export default function RegisterPage() {
 
         <CardContent className="space-y-6">
           {/* Benefits Banner */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+          <div className="p-4 bg-[#e0f9fc] rounded-lg border border-[#a8f0f8]">
             <p className="font-semibold mb-2 text-xs text-gray-700 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-purple-600" />
+              <Sparkles className="w-4 h-4 text-[#1ecbe1]" />
               Keuntungan Member:
             </p>
             <ul className="space-y-1 text-xs text-gray-600">
@@ -171,7 +162,6 @@ export default function RegisterPage() {
           </div>
 
           <form action={handleSubmit} className="space-y-4">
-
             {/* Full Name */}
             <div className="space-y-2">
               <Label htmlFor="name" className="text-xs font-medium flex items-center gap-2">
@@ -179,16 +169,11 @@ export default function RegisterPage() {
                 Nama Lengkap <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="name"
-                name="name"
-                type="text"
-                required
+                id="name" name="name" type="text" required
                 placeholder="Ziyad Imana"
-                value={name}
-                onChange={handleNameChange}
-                disabled={loading}
-                maxLength={80}
-                className="h-11 text-sm"
+                value={name} onChange={handleNameChange}
+                disabled={loading} maxLength={80}
+                className="h-11 text-sm focus-visible:ring-[#1ecbe1]"
               />
             </div>
 
@@ -199,38 +184,28 @@ export default function RegisterPage() {
                 WhatsApp Number <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={phone}
-                onChange={handlePhoneChange}
+                id="phone" name="phone" type="tel"
+                value={phone} onChange={handlePhoneChange}
                 onKeyDown={(e) => {
                   const controlKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
                   if (!controlKeys.includes(e.key) && !/^[0-9+]$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
                     e.preventDefault();
                   }
                 }}
-                minLength={9}
-                maxLength={19}
-                inputMode="tel"
-                required
+                minLength={9} maxLength={19} inputMode="tel" required
                 placeholder="0812 3456 7890"
                 disabled={loading}
-                className="h-11 text-sm"
+                className="h-11 text-sm focus-visible:ring-[#1ecbe1]"
               />
-              <p className="text-xs text-muted-foreground">
-                Diperlukan untuk login dan klaim poin
-              </p>
+              <p className="text-xs text-muted-foreground">Diperlukan untuk login dan klaim poin</p>
             </div>
-            
-            {/* ── Birthday Picker ── */}
+
+            {/* Birthday Picker */}
             <div className="space-y-2">
               <Label className="text-xs font-medium flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-gray-500" />
                 Tanggal Lahir <span className="text-red-500">*</span>
               </Label>
-
-              {/* Hidden ISO value for form submission */}
               <input type="hidden" name="birthday" value={birthdayValue} />
 
               {/* Progress bar */}
@@ -239,39 +214,31 @@ export default function RegisterPage() {
                   <div
                     key={i}
                     className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                      done ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gray-200'
+                      done ? 'bg-[#1ecbe1]' : 'bg-gray-200'
                     }`}
                   />
                 ))}
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                {/* Step 1 — Year */}
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 font-medium">① Tahun</p>
                   <div className="relative">
                     <select
                       value={birthYear}
-                      onChange={(e) => {
-                        setBirthYear(e.target.value);
-                        setBirthMonth('');
-                        setBirthDay('');
-                      }}
+                      onChange={(e) => { setBirthYear(e.target.value); setBirthMonth(''); setBirthDay(''); }}
                       disabled={loading}
                       className={selectClass(true, !!birthYear)}
                     >
                       <option value="">--</option>
-                      {years.map((y) => (
-                        <option key={y} value={String(y)}>{y}</option>
-                      ))}
+                      {years.map((y) => <option key={y} value={String(y)}>{y}</option>)}
                     </select>
                     <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
-                {/* Step 2 — Month */}
                 <div className="space-y-1">
-                  <p className={`text-xs font-medium transition-colors duration-200 ${monthUnlocked ? 'text-blue-500' : 'text-gray-300'}`}>
+                  <p className={`text-xs font-medium transition-colors duration-200 ${monthUnlocked ? 'text-[#1ecbe1]' : 'text-gray-300'}`}>
                     ② Bulan {monthUnlocked && !birthMonth && '👈'}
                   </p>
                   <div className="relative">
@@ -279,7 +246,6 @@ export default function RegisterPage() {
                       value={birthMonth}
                       onChange={(e) => {
                         setBirthMonth(e.target.value);
-                        // clamp day: fewer days in month, OR current year+month restricts to before today
                         const totalDays = new Date(Number(birthYear) || 2000, Number(e.target.value), 0).getDate();
                         const isCurrent = Number(birthYear) === currentYear && Number(e.target.value) === currentMonth;
                         const newMaxDay = isCurrent ? Math.min(currentDay - 1, totalDays) : totalDays;
@@ -297,9 +263,8 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Step 3 — Day */}
                 <div className="space-y-1">
-                  <p className={`text-xs font-medium transition-colors duration-200 ${dayUnlocked ? 'text-blue-500' : 'text-gray-300'}`}>
+                  <p className={`text-xs font-medium transition-colors duration-200 ${dayUnlocked ? 'text-[#1ecbe1]' : 'text-gray-300'}`}>
                     ③ Tanggal {dayUnlocked && !birthDay && '👈'}
                   </p>
                   <div className="relative">
@@ -310,31 +275,28 @@ export default function RegisterPage() {
                       className={selectClass(dayUnlocked, !!birthDay)}
                     >
                       <option value="">{dayUnlocked ? 'Pilih tgl' : '--'}</option>
-                      {days.map((d) => (
-                        <option key={d} value={String(d)}>{d}</option>
-                      ))}
+                      {days.map((d) => <option key={d} value={String(d)}>{d}</option>)}
                     </select>
                     <ChevronDown className={`w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none ${dayUnlocked ? 'text-gray-400' : 'text-gray-200'}`} />
                   </div>
                 </div>
               </div>
 
-              {/* Status message */}
               <div className="min-h-[20px]">
                 {birthdayValue ? (
                   <p className="text-xs text-green-600 font-medium flex items-center gap-1">
                     ✓ {birthDay} {months[Number(birthMonth) - 1]} {birthYear}
                   </p>
                 ) : dayUnlocked && !birthDay ? (
-                  <p className="text-xs text-blue-500">Satu langkah lagi — pilih tanggal lahir</p>
+                  <p className="text-xs text-[#1ecbe1]">Satu langkah lagi — pilih tanggal lahir</p>
                 ) : monthUnlocked && !birthMonth ? (
-                  <p className="text-xs text-blue-500">Sekarang pilih bulan lahir</p>
+                  <p className="text-xs text-[#1ecbe1]">Sekarang pilih bulan lahir</p>
                 ) : !birthYear ? (
                   <p className="text-xs text-gray-400">Mulai dengan memilih tahun lahir</p>
                 ) : null}
               </div>
             </div>
-            
+
             {/* Address */}
             <div className="space-y-2">
               <Label htmlFor="address" className="text-xs font-medium flex items-center gap-2">
@@ -342,15 +304,12 @@ export default function RegisterPage() {
                 Alamat <span className="text-red-500">*</span>
               </Label>
               <Textarea
-                id="address"
-                name="address"
+                id="address" name="address"
                 placeholder="Nama Jalan, Kota, Kode Pos"
-                value={address}
-                required
+                value={address} required
                 onChange={(e) => setAddress(e.target.value)}
-                disabled={loading}
-                maxLength={150}
-                className="h-11 text-sm"
+                disabled={loading} maxLength={150}
+                className="h-11 text-sm focus-visible:ring-[#1ecbe1]"
               />
               <p className="text-xs text-gray-500 text-right">{address.length}/150 karakter</p>
             </div>
@@ -363,14 +322,11 @@ export default function RegisterPage() {
                 <span className="text-gray-400 font-normal">(Opsional — jika ingin login alternatif)</span>
               </Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id="email" name="email" type="email"
                 placeholder="you@example.com"
-                disabled={loading}
-                onChange={handleEmailChange}
+                disabled={loading} onChange={handleEmailChange}
                 pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
-                className="h-11 text-sm"
+                className="h-11 text-sm focus-visible:ring-[#1ecbe1]"
               />
               {emailError && <p className="text-xs text-red-500">{emailError}</p>}
             </div>
@@ -384,26 +340,16 @@ export default function RegisterPage() {
                 </Label>
                 <div className="relative">
                   <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    placeholder="Min. 6 characters"
-                    minLength={6}
-                    disabled={loading}
-                    className="h-11 text-sm pr-10"
+                    id="password" name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required placeholder="Min. 6 characters"
+                    minLength={6} disabled={loading}
+                    className="h-11 text-sm pr-10 focus-visible:ring-[#1ecbe1]"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                  <button type="button" onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    disabled={loading}>
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -414,26 +360,16 @@ export default function RegisterPage() {
                 </Label>
                 <div className="relative">
                   <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    required
-                    placeholder="Re-enter password"
-                    minLength={6}
-                    disabled={loading}
-                    className="h-11 text-sm pr-10"
+                    id="confirmPassword" name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required placeholder="Re-enter password"
+                    minLength={6} disabled={loading}
+                    className="h-11 text-sm pr-10 focus-visible:ring-[#1ecbe1]"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    disabled={loading}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    disabled={loading}>
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -447,7 +383,7 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 text-sm font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full h-11 text-sm font-semibold bg-[#028697] hover:bg-[#17a8bb] text-white transition-all duration-200 shadow-lg hover:shadow-xl"
               disabled={loading}
             >
               {loading ? (
@@ -476,7 +412,7 @@ export default function RegisterPage() {
           <Link href="/login" className="block">
             <Button
               variant="outline"
-              className="w-full h-11 text-sm font-semibold border-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200"
+              className="w-full h-11 text-sm font-semibold border-2 border-[#028697] text-[#028697] hover:bg-[#e0f9fc] transition-all duration-200"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Login
@@ -484,16 +420,15 @@ export default function RegisterPage() {
           </Link>
 
           <Link href="/landing" className="block">
-            <Button 
-              variant="outline" 
-              className="w-full h-7 font-normal"
-              style={{ textDecoration: 'underline'}}
+            <Button
+              variant="outline"
+              className="w-full h-7 font-normal border-[#a8f0f8] text-[#028697] hover:bg-[#e0f9fc]"
+              style={{ textDecoration: 'underline' }}
             >
               <Notebook className="w-2 h-2 mr-0" />
               lihat produk
             </Button>
           </Link>
-
         </CardContent>
       </Card>
     </div>
