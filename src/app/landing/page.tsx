@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'; // ← add this
 import { db } from '@/lib/db';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
