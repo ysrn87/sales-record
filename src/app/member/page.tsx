@@ -162,8 +162,7 @@ export default async function MemberDashboard({
               {/* Comparison with Yesterday */}
               {(() => {
                 const todayTotal = todayPurchases.reduce((sum: number, p: typeof todayPurchases[number]) => sum + Number(p.total), 0);
-                const yesterdayTotal = yesterdayPurchases.reduce((sum: number, p: typeof todayPurchases[number]) => sum + Number(p.total), 0);
-
+                const yesterdayTotal = yesterdayPurchases.reduce((sum: number, p: typeof yesterdayPurchases[number]) => sum + Number(p.total), 0);
                 if (yesterdayTotal === 0) return null;
 
                 const percentageChange = ((todayTotal - yesterdayTotal) / yesterdayTotal) * 100;
