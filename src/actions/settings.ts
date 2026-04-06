@@ -246,6 +246,10 @@ export async function updateAdminPassword(currentPassword: string, newPassword: 
     throw new Error('Admin not found');
   }
 
+  if (!admin.password) {
+    throw new Error('Account has no password set');
+  }
+
   // Verify current password
   const isPasswordValid = await bcrypt.compare(currentPassword, admin.password);
   if (!isPasswordValid) {
