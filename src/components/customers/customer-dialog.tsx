@@ -149,7 +149,7 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
                 type="text"
                 required
                 value={name}
-                placeholder="Ziyad Imana"
+                placeholder="Nama Lengkap"
                 onChange={handleNameChange}
                 disabled={loading}
                 maxLength={80}

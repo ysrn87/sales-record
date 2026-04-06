@@ -16,8 +16,10 @@ interface EditSaleDialogProps {
     id: string;
     customerId: string | null;
     paymentMethod: string;
+    paymentStatus?: string;
     discount: number;
     tax: number;
+    ongkir: number;
     notes: string | null;
     pointsRedeemed?: number;
     items: Array<{
@@ -53,8 +55,10 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
   const [items, setItems] = useState<SaleItem[]>([]);
   const [customerId, setCustomerId] = useState<string>(sale.customerId || 'WALK_IN');
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.paymentMethod);
+  const [paymentStatus, setPaymentStatus] = useState<string>(sale.paymentStatus || 'PAID');
   const [discount, setDiscount] = useState<number>(sale.discount);
   const [tax, setTax] = useState<number>(sale.tax);
+  const [ongkir, setOngkir] = useState<number>(sale.ongkir || 0);
   const [notes, setNotes] = useState<string>(sale.notes || '');
   const { toast } = useToast();
 
@@ -73,7 +77,7 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
   }, [sale]);
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const total = subtotal - discount - pointDiscount + tax;
+  const total = subtotal - discount - pointDiscount + tax + ongkir;
 
   const updateQuantity = (index: number, newQty: number) => {
     const newItems = [...items];
@@ -107,8 +111,10 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
         })),
         customerId: customerId === 'WALK_IN' ? null : customerId,
         paymentMethod,
+        paymentStatus,
         discount,
         tax,
+        ongkir,
         notes: notes || undefined,
         pointsRedeemed: pointsRedeemed,
       });
@@ -201,6 +207,20 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
             </div>
 
             <div className="grid gap-2">
+              <Label htmlFor="paymentStatus">Status Pembayaran</Label>
+              <Select value={paymentStatus} onValueChange={setPaymentStatus} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PAID">Lunas</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="UNPAID">Belum Lunas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
               <Label htmlFor="discount">Discount</Label>
               <Input
                 id="discount"
@@ -222,6 +242,19 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
                 min="0"
                 value={tax}
                 onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="grid gap-2 col-span-full">
+              <Label htmlFor="ongkir">Ongkir (Biaya Pengiriman)</Label>
+              <Input
+                id="ongkir"
+                type="number"
+                step="0.01"
+                min="0"
+                value={ongkir}
+                onChange={(e) => setOngkir(parseFloat(e.target.value) || 0)}
                 disabled={loading}
               />
             </div>
@@ -286,6 +319,12 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
               <div className="flex justify-between text-sm">
                 <span>Tax:</span>
                 <span>{formatCurrency(tax)}</span>
+              </div>
+            )}
+            {ongkir > 0 && (
+              <div className="flex justify-between text-sm text-orange-600">
+                <span>Ongkir:</span>
+                <span>+{formatCurrency(ongkir)}</span>
               </div>
             )}
             <div className="flex justify-between text-base sm:text-lg font-bold pt-2 border-t">

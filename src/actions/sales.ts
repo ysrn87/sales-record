@@ -17,8 +17,10 @@ interface CreateSaleInput {
   items: SaleItemInput[];
   customerId: string | null;
   paymentMethod: string;
+  paymentStatus?: string;
   discount?: number;
   tax?: number;
+  ongkir?: number;
   notes?: string;
   pointsRedeemed?: number; // Points used as discount
 }
@@ -30,7 +32,7 @@ export async function createSaleAction(input: CreateSaleInput) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const { items, customerId, paymentMethod, discount = 0, tax = 0, notes, pointsRedeemed = 0 } = input;
+    const { items, customerId, paymentMethod, paymentStatus = 'PAID', discount = 0, tax = 0, ongkir = 0, notes, pointsRedeemed = 0 } = input;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'No items in sale' };
@@ -85,8 +87,8 @@ export async function createSaleAction(input: CreateSaleInput) {
       };
     }
 
-    // Calculate final total (subtract both regular discount AND point discount)
-    const total = subtotal - discount - pointDiscount + tax;
+    // Calculate final total (subtract both regular discount AND point discount, add ongkir)
+    const total = subtotal - discount - pointDiscount + tax + ongkir;
 
     // Prevent negative total
     if (total < 0) {
@@ -104,8 +106,10 @@ export async function createSaleAction(input: CreateSaleInput) {
           subtotal,
           discount,
           tax,
+          ongkir,
           total,
           paymentMethod,
+          paymentStatus: paymentStatus as any,
           notes,
           pointsEarned: customerId && pointsRedeemed === 0 ? pointsEarned : 0,
           pointsRedeemed: customerId ? pointsRedeemed : 0,
@@ -271,7 +275,7 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
       return { success: false, error: 'Unauthorized - Admin access required' };
     }
 
-    const { items, customerId, paymentMethod, discount = 0, tax = 0, notes, pointsRedeemed = 0 } = input;
+    const { items, customerId, paymentMethod, paymentStatus = 'PAID', discount = 0, tax = 0, ongkir = 0, notes, pointsRedeemed = 0 } = input;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'No items in sale' };
@@ -325,7 +329,7 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const conversionRate = await getPointsConversionRate();
     const pointDiscount = pointsRedeemed * conversionRate;
-    const total = subtotal - discount - pointDiscount + tax;
+    const total = subtotal - discount - pointDiscount + tax + ongkir;
 
     // Update sale in transaction
     await db.$transaction(async (tx) => {
@@ -359,8 +363,10 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
           subtotal,
           discount,
           tax,
+          ongkir,
           total,
           paymentMethod,
+          paymentStatus: paymentStatus as any,
           notes,
           pointsEarned: customerId ? pointsEarned : 0,
           pointsRedeemed: pointsRedeemed,

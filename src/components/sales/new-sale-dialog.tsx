@@ -46,8 +46,10 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
   const [quantity, setQuantity] = useState<number>(1);
   const [customerId, setCustomerId] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
+  const [paymentStatus, setPaymentStatus] = useState<string>('PAID');
   const [discount, setDiscount] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
+  const [ongkir, setOngkir] = useState<number>(0);
   const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
 
@@ -64,7 +66,7 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
   const pointDiscount = pointsToRedeem * conversionRate;
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const total = subtotal - discount - pointDiscount + tax;
+  const total = subtotal - discount - pointDiscount + tax + ongkir;
 
   const pointsEarned = (customerId && customerId !== 'WALK_IN' && pointsToRedeem === 0)
     ? items.reduce((sum, item) => {
@@ -247,8 +249,10 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
         })),
         customerId: customerId === 'WALK_IN' ? null : customerId,
         paymentMethod,
+        paymentStatus,
         discount,
         tax,
+        ongkir,
         notes,
         pointsRedeemed: customerId !== 'WALK_IN' ? pointsToRedeem : 0,
       });
@@ -262,6 +266,8 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
         setCustomerId('');
         setDiscount(0);
         setTax(0);
+        setOngkir(0);
+        setPaymentStatus('PAID');
         setPointsToRedeem(0);
         setNotes('');
         setOpen(false);
@@ -310,6 +316,7 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
   const [quantityDisplay, setQuantityDisplay] = useState('1');
   const [discountDisplay, setDiscountDisplay] = useState('');
   const [taxDisplay, setTaxDisplay] = useState('');
+  const [ongkirDisplay, setOngkirDisplay] = useState('');
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -594,7 +601,22 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
                 </Select>
               </div>
 
-              {/* Discount & Tax */}
+              {/* Payment Status */}
+              <div className="grid gap-2">
+                <Label htmlFor="paymentStatus" className="text-sm">Status Pembayaran</Label>
+                <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PAID">Lunas</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="UNPAID">Belum Lunas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Discount, Tax & Ongkir */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="discount" className="text-sm">
@@ -627,6 +649,23 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
                       const num = parseInt(raw) || 0;
                       setTaxDisplay(raw ? num.toLocaleString('en-US') : '');
                       setTax(num);
+                    }}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div className="grid gap-2 col-span-2">
+                  <Label htmlFor="ongkir" className="text-sm">Ongkir (Biaya Pengiriman)</Label>
+                  <Input
+                    id="ongkir"
+                    type="text"
+                    inputMode="numeric"
+                    value={ongkirDisplay}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      const num = parseInt(raw) || 0;
+                      setOngkirDisplay(raw ? num.toLocaleString('en-US') : '');
+                      setOngkir(num);
                     }}
                     placeholder="0"
                   />
@@ -721,6 +760,12 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
                     <div className="flex justify-between text-sm">
                       <span>Tax:</span>
                       <span className="font-medium">{formatCurrency(tax)}</span>
+                    </div>
+                  )}
+                  {ongkir > 0 && (
+                    <div className="flex justify-between text-sm text-orange-600">
+                      <span>Ongkir:</span>
+                      <span className="font-medium">+{formatCurrency(ongkir)}</span>
                     </div>
                   )}
 

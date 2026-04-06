@@ -170,7 +170,7 @@ export default function RegisterPage() {
               </Label>
               <Input
                 id="name" name="name" type="text" required
-                placeholder="Ziyad Imana"
+                placeholder="Nama Lengkap"
                 value={name} onChange={handleNameChange}
                 disabled={loading} maxLength={80}
                 className="h-11 text-sm focus-visible:ring-[#1ecbe1]"

@@ -110,7 +110,7 @@ export function CustomersTable({
                 return (
                   <TableRow key={customer.id}>
                     <TableCell className="font-medium">
-                      <p className='line-clamp-2 min-w-32'>
+                      <p className='truncate'>
                         {customer.name}
                       </p>  
                     </TableCell>
@@ -129,7 +129,7 @@ export function CustomersTable({
                       </p>                      
                     </TableCell>
                     <TableCell title={customer.address || '-'}>
-                      <p className='line-clamp-2 min-w-60'>
+                      <p className='line-clamp-20'>
                         {customer.address || '-'}
                       </p>  
                     </TableCell>

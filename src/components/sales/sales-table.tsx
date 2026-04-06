@@ -17,6 +17,12 @@ interface SalesTableProps {
   conversionRate?: number;
 }
 
+const paymentStatusConfig: Record<string, { label: string; className: string }> = {
+  PAID:    { label: 'Lunas',       className: 'bg-green-100 text-green-800' },
+  PENDING: { label: 'Pending',     className: 'bg-yellow-100 text-yellow-800' },
+  UNPAID:  { label: 'Belum Lunas', className: 'bg-red-100 text-red-800' },
+};
+
 export function SalesTable({ sales, currentPage, pageSize, totalItems, conversionRate = 1000 }: SalesTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -34,7 +40,7 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
   const handlePageSizeChange = (size: number) => {
     const params = new URLSearchParams(searchParams);
     params.set('limit', size.toString());
-    params.set('page', '1'); // Reset to page 1
+    params.set('page', '1');
     router.push(`?${params.toString()}`);
   };
 
@@ -63,36 +69,45 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
             <TableHead>Item</TableHead>
             <TableHead>Total</TableHead>
             <TableHead>Pembayaran</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Note</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className='text-xs'>
-          {sales.map((sale) => (
-            <TableRow key={sale.id}>
-              <TableCell className="font-medium">{sale.saleNumber}</TableCell>
-              <TableCell>{formatDateTime(sale.createdAt)}</TableCell>
-              <TableCell>{sale.customer?.name || 'Pelanggan-umum'}</TableCell>
-              <TableCell>{sale.cashier.name}</TableCell>
-              <TableCell>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} unit</TableCell>
-              <TableCell>{formatCurrency(sale.total)}</TableCell>
-              <TableCell>
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {sale.paymentMethod}
-                </span>
-              </TableCell>
-              <TableCell>{sale.notes || '-'}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleViewDetails(sale)}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {sales.map((sale) => {
+            const statusCfg = paymentStatusConfig[sale.paymentStatus] ?? paymentStatusConfig.PAID;
+            return (
+              <TableRow key={sale.id}>
+                <TableCell className="font-medium truncate">{sale.saleNumber}</TableCell>
+                <TableCell className='truncate'>{formatDateTime(sale.createdAt)}</TableCell>
+                <TableCell className='truncate'>{sale.customer?.name || 'Pelanggan-umum'}</TableCell>
+                <TableCell>{sale.cashier.name}</TableCell>
+                <TableCell>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} unit</TableCell>
+                <TableCell>{formatCurrency(sale.total)}</TableCell>
+                <TableCell>
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {sale.paymentMethod}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusCfg.className}`}>
+                    {statusCfg.label}
+                  </span>
+                </TableCell>
+                <TableCell className='truncate'>{sale.notes || '-'}</TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewDetails(sale)}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 

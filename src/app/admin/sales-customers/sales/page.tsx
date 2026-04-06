@@ -10,6 +10,7 @@ async function getSales(params: {
   limit?: number;
   search?: string;
   payment?: string;
+  paymentStatus?: string;
   sort?: string;
 }) {
   const { 
@@ -17,6 +18,7 @@ async function getSales(params: {
     limit = 10, 
     search = '', 
     payment = 'all',
+    paymentStatus = 'all',
     sort = 'date_desc'
   } = params;
   
@@ -47,6 +49,11 @@ async function getSales(params: {
   // Filter by payment method
   if (payment !== 'all') {
     where.paymentMethod = payment;
+  }
+
+  // Filter by payment status
+  if (paymentStatus !== 'all') {
+    where.paymentStatus = paymentStatus;
   }
 
   // Build orderBy clause
@@ -106,6 +113,7 @@ async function getSales(params: {
       subtotal: Number(sale.subtotal),
       discount: Number(sale.discount),
       tax: Number(sale.tax),
+      ongkir: Number(sale.ongkir),
       total: Number(sale.total),
       items: sale.items.map((item: typeof sale.items[number]) => ({
         ...item,
@@ -170,6 +178,7 @@ export default async function AdminSalesPage({
     limit?: string;
     search?: string;
     payment?: string;
+    paymentStatus?: string;
     sort?: string;
   }>;
 }) {
@@ -178,10 +187,11 @@ export default async function AdminSalesPage({
   const limit = Number(params.limit) || 10;
   const search = params.search || '';
   const payment = params.payment || 'all';
+  const paymentStatus = params.paymentStatus || 'all';
   const sort = params.sort || 'date_desc';
 
   const [{ sales, total }, variants, customers, conversionRate] = await Promise.all([
-    getSales({ page, limit, search, payment, sort }),
+    getSales({ page, limit, search, payment, paymentStatus, sort }),
     getVariants(),
     getCustomers(),
     getPointsConversionRate(),
@@ -211,6 +221,17 @@ export default async function AdminSalesPage({
                   { value: 'CASH', label: 'Cash' },
                   { value: 'CARD', label: 'Card' },
                   { value: 'TRANSFER', label: 'Bank Transfer' },
+                ],
+              },
+              {
+                key: 'paymentStatus',
+                label: 'Status Pembayaran',
+                defaultValue: 'all',
+                options: [
+                  { value: 'all', label: 'Semua Status' },
+                  { value: 'PAID', label: 'Lunas' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'UNPAID', label: 'Belum Lunas' },
                 ],
               },
             ]}

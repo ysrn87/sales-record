@@ -16,8 +16,10 @@ interface SaleDetailsDialogProps {
     subtotal: number;
     discount: number;
     tax: number;
+    ongkir: number;
     total: number;
     paymentMethod: string;
+    paymentStatus: string;
     notes: string | null;
     pointsEarned: number;
     pointsRedeemed?: number;
@@ -109,6 +111,7 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
           <div class="details-box">
             <h3>PAYMENT INFO</h3>
             <p><strong>Method:</strong> ${sale.paymentMethod}</p>
+            <p><strong>Status:</strong> ${sale.paymentStatus === 'PAID' ? 'Lunas' : sale.paymentStatus === 'PENDING' ? 'Pending' : 'Belum Lunas'}</p>
             <p><strong>Cashier:</strong> ${sale.cashier.name}</p>
             ${sale.customer && sale.pointsEarned > 0 ? `<p><strong>Points Earned:</strong> ${sale.pointsEarned}</p>` : ''}
             ${pointsRedeemed > 0 ? `<p style="color: purple;"><strong>Points Redeemed:</strong> ${pointsRedeemed} pts</p>` : ''}
@@ -160,6 +163,12 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
             <div class="totals-row">
               <span>Tax:</span>
               <span>${formatCurrency(sale.tax)}</span>
+            </div>
+          ` : ''}
+          ${sale.ongkir > 0 ? `
+            <div class="totals-row" style="color: orange;">
+              <span>Ongkir:</span>
+              <span>+${formatCurrency(sale.ongkir)}</span>
             </div>
           ` : ''}
           <div class="totals-row total">
@@ -246,6 +255,17 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                 <h4 className="font-medium mb-2 text-sm sm:text-base">Pembayaran</h4>
                 <p className="text-xs sm:text-sm"><span className="text-gray-600">Metode:</span> {sale.paymentMethod}</p>
                 <p className="text-xs sm:text-sm"><span className="text-gray-600">Cashier:</span> {sale.cashier.name}</p>
+                <div className="mt-2">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    sale.paymentStatus === 'PAID'
+                      ? 'bg-green-100 text-green-800'
+                      : sale.paymentStatus === 'PENDING'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {sale.paymentStatus === 'PAID' ? 'Lunas' : sale.paymentStatus === 'PENDING' ? 'Pending' : 'Belum Lunas'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -290,6 +310,12 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Tax</span>
                   <span className="font-medium">{formatCurrency(sale.tax)}</span>
+                </div>
+              )}
+              {sale.ongkir > 0 && (
+                <div className="flex justify-between text-xs sm:text-sm text-orange-600">
+                  <span>Ongkir</span>
+                  <span className="font-medium">+{formatCurrency(sale.ongkir)}</span>
                 </div>
               )}
               <div className="flex justify-between text-base sm:text-lg font-bold pt-2 border-t">
