@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { createSaleAction } from '@/actions/sales';
-import { Plus, Trash2, Gift, X, User, Search, ChevronDown } from 'lucide-react';
+import { createNonMemberAction } from '@/actions/members';
+import { Plus, Trash2, Gift, X, User, Search, ChevronDown, UserPlus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface SaleItem {
@@ -34,11 +35,17 @@ interface NewSaleDialogProps {
     id: string;
     name: string;
     points: number;
+    isMember?: boolean;
+  }>;
+  nonMembers?: Array<{
+    id: string;
+    name: string;
+    phone: string;
   }>;
   conversionRate?: number;
 }
 
-export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: NewSaleDialogProps) {
+export function NewSaleDialog({ variants, customers, nonMembers = [], conversionRate = 1000 }: NewSaleDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<SaleItem[]>([]);
@@ -58,6 +65,14 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
   const [productSearch, setProductSearch] = useState('');
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+
+  // Inline non-member add form
+  const [showAddNonMember, setShowAddNonMember] = useState(false);
+  const [nmName, setNmName] = useState('');
+  const [nmPhone, setNmPhone] = useState('');
+  const [nmAddress, setNmAddress] = useState('');
+  const [nmLoading, setNmLoading] = useState(false);
+  const [localNonMembers, setLocalNonMembers] = useState(nonMembers);
 
   const { toast } = useToast();
 
@@ -289,19 +304,60 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
     }
   };
 
+  // Handle inline non-member creation
+  const handleAddNonMember = async () => {
+    if (!nmName.trim() || !nmPhone.trim() || !nmAddress.trim()) {
+      toast({ title: 'Error', description: 'Nama, HP, dan alamat wajib diisi.', variant: 'destructive' });
+      return;
+    }
+    setNmLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append('name', nmName.trim());
+      fd.append('phone', nmPhone.replace(/\s/g, ''));
+      fd.append('address', nmAddress.trim());
+      const result = await createNonMemberAction(fd);
+      if (result.success && result.customerId) {
+        const newNm = { id: result.customerId, name: result.customerName || nmName.trim(), phone: nmPhone };
+        setLocalNonMembers(prev => [newNm, ...prev]);
+        handleCustomerChange(result.customerId);
+        setShowAddNonMember(false);
+        setNmName(''); setNmPhone(''); setNmAddress('');
+        setIsCustomerDropdownOpen(false);
+        toast({ title: 'Berhasil!', description: `${newNm.name} ditambahkan dan dipilih.` });
+      } else {
+        toast({ title: 'Error', description: (result as any).error || 'Gagal menambah pelanggan.', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Terjadi kesalahan.', variant: 'destructive' });
+    } finally {
+      setNmLoading(false);
+    }
+  };
+
   // Get customer display name
   const getCustomerDisplayName = () => {
     if (!customerId) return null;
     if (customerId === 'WALK_IN') return 'Pelanggan Umum';
-    return selectedCustomer?.name || '';
+    const member = customers.find(c => c.id === customerId);
+    if (member) return member.name;
+    const nm = localNonMembers.find(c => c.id === customerId);
+    if (nm) return `${nm.name} (Non-Member)`;
+    return '';
   };
 
   // Get selected variant
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
 
-  // Filter customers
+  // Filter members
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
+  );
+
+  // Filter non-members
+  const filteredNonMembers = localNonMembers.filter(c =>
+    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    c.phone.includes(customerSearch)
   );
 
   // Filter variants
@@ -326,7 +382,7 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
           Penjualan Baru
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Penjualan Baru</DialogTitle>
         </DialogHeader>
@@ -337,6 +393,60 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
             <Label className="text-sm font-medium">
               Customer <span className="text-red-500">*</span>
             </Label>
+
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowAddNonMember(v => !v); }}
+              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium"
+            >
+              <UserPlus className="w-3 h-3" />
+              Tambah Baru
+            </button>
+
+            {/* Inline add non-member form */}
+            {showAddNonMember && (
+              <div className="p-3 border-b bg-blue-50 space-y-2" onClick={(e) => e.stopPropagation()}>
+                <input
+                  className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  placeholder="Nama *"
+                  value={nmName}
+                  onChange={(e) => setNmName(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
+                  disabled={nmLoading}
+                />
+                <input
+                  className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  placeholder="No. HP *"
+                  inputMode="tel"
+                  value={nmPhone}
+                  onChange={(e) => setNmPhone(e.target.value.replace(/[^0-9+\s]/g, ''))}
+                  disabled={nmLoading}
+                />
+                <input
+                  className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  placeholder="Alamat *"
+                  value={nmAddress}
+                  onChange={(e) => setNmAddress(e.target.value)}
+                  disabled={nmLoading}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAddNonMember}
+                    disabled={nmLoading}
+                    className="flex-1 bg-blue-600 text-white text-xs py-1.5 rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {nmLoading ? 'Menyimpan...' : 'Simpan & Pilih'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowAddNonMember(false); setNmName(''); setNmPhone(''); setNmAddress(''); }}
+                    className="px-3 border text-xs py-1.5 rounded hover:bg-gray-100"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="relative">
               {/* Combobox Button */}
@@ -388,13 +498,12 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
                   </div>
 
                   {/* Options list */}
-                  <div className="max-h-[240px] overflow-y-auto">
+                  <div className="max-h-[280px] overflow-y-auto">
                     {/* Walk-in option */}
                     {(!customerSearch || 'pelanggan umum'.includes(customerSearch.toLowerCase())) && (
                       <div
                         onClick={() => handleCustomerChange('WALK_IN')}
-                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${customerId === 'WALK_IN' ? 'bg-blue-50' : ''
-                          }`}
+                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${customerId === 'WALK_IN' ? 'bg-blue-50' : ''}`}
                       >
                         <span className="text-sm">Pelanggan Umum</span>
                         {customerId === 'WALK_IN' && (
@@ -407,13 +516,17 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
                       </div>
                     )}
 
-                    {/* Customer list */}
+                    {/* Member list */}
+                    {filteredCustomers.length > 0 && (
+                      <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 border-b">
+                        Member
+                      </div>
+                    )}
                     {filteredCustomers.map((customer) => (
                       <div
                         key={customer.id}
                         onClick={() => handleCustomerChange(customer.id)}
-                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${customerId === customer.id ? 'bg-blue-50' : ''
-                          }`}
+                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${customerId === customer.id ? 'bg-blue-50' : ''}`}
                       >
                         <div className="flex flex-col min-w-0 flex-1 mr-2">
                           <span className="font-medium text-sm truncate">{customer.name}</span>
@@ -429,9 +542,35 @@ export function NewSaleDialog({ variants, customers, conversionRate = 1000 }: Ne
                       </div>
                     ))}
 
+                    {/* Non-member section */}
+                    <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 border-y flex items-center justify-between">
+                      <span>Non-Member</span>
+                    </div>
+
+                    {filteredNonMembers.map((nm) => (
+                      <div
+                        key={nm.id}
+                        onClick={() => handleCustomerChange(nm.id)}
+                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${customerId === nm.id ? 'bg-blue-50' : ''}`}
+                      >
+                        <div className="flex flex-col min-w-0 flex-1 mr-2">
+                          <span className="font-medium text-sm truncate">{nm.name}</span>
+                          <span className="text-xs text-gray-500">{nm.phone}</span>
+                        </div>
+                        {customerId === nm.id && (
+                          <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
                     {/* No results */}
                     {customerSearch &&
                       filteredCustomers.length === 0 &&
+                      filteredNonMembers.length === 0 &&
                       !'pelanggan umum'.includes(customerSearch.toLowerCase()) && (
                         <div className="p-4 text-center text-sm text-gray-500">
                           No customers found

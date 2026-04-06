@@ -133,7 +133,7 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' ? 'Tambah Member' : 'Edit Member'}

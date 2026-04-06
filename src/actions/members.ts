@@ -422,3 +422,225 @@ export async function getCustomerPointsHistory(customerId: string, page: number 
 
   return { history, total };
 }
+// ─── NON-MEMBER ACTIONS ───────────────────────────────────────────────────────
+
+export async function getNonMemberCustomers(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
+}) {
+  const session = await auth();
+  if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+    throw new Error('Unauthorized');
+  }
+
+  const { page = 1, limit = 10, search = '', sort = 'name_asc' } = params;
+  const skip = (page - 1) * limit;
+
+  const where: any = { role: 'NON_MEMBER' };
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' as const } },
+      { phone: { contains: search, mode: 'insensitive' as const } },
+    ];
+  }
+
+  const orderBy: any = sort === 'name_desc' ? { name: 'desc' }
+    : sort === 'joined_desc' ? { createdAt: 'desc' }
+    : sort === 'joined_asc'  ? { createdAt: 'asc' }
+    : { name: 'asc' };
+
+  const [customers, total] = await Promise.all([
+    db.user.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      include: {
+        sales: { select: { id: true, total: true } },
+        _count: { select: { sales: true } },
+      },
+    }),
+    db.user.count({ where }),
+  ]);
+
+  return {
+    customers: customers.map((c: typeof customers[number]) => ({
+      ...c,
+      sales: c.sales.map((s: typeof c.sales[number]) => ({ id: s.id, total: Number(s.total) })),
+    })),
+    total,
+  };
+}
+
+export async function createNonMemberAction(formData: FormData) {
+  try {
+    const session = await auth();
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const name    = (formData.get('name')    as string)?.trim();
+    const rawPhone = formData.get('phone')   as string;
+    const address = (formData.get('address') as string)?.trim();
+
+    const phone = normalizePhone(rawPhone || '');
+
+    if (!name || !phone || !address) {
+      return { success: false, error: 'Nama, nomor HP, dan alamat wajib diisi' };
+    }
+    if (phone.length < 10 || phone.length > 15) {
+      return { success: false, error: 'Nomor HP tidak valid' };
+    }
+    if (name.length > 80) {
+      return { success: false, error: 'Nama maksimal 80 karakter' };
+    }
+
+    const existing = await db.user.findFirst({ where: { phone } });
+    if (existing) {
+      return { success: false, error: 'Nomor HP sudah terdaftar' };
+    }
+
+    const newUser = await db.user.create({
+      data: {
+        name,
+        phone,
+        address,
+        password: null,
+        role: 'NON_MEMBER',
+        points: 0,
+      },
+    });
+
+    revalidatePath('/admin/sales-customers/customers');
+    revalidatePath('/admin/sales-customers/sales');
+    return { success: true, customerId: newUser.id, customerName: newUser.name };
+  } catch (error) {
+    console.error('Create non-member error:', error);
+    return { success: false, error: 'Gagal menambah pelanggan' };
+  }
+}
+
+export async function updateNonMemberAction(id: string, formData: FormData) {
+  try {
+    const session = await auth();
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const name     = (formData.get('name')    as string)?.trim();
+    const rawPhone  = formData.get('phone')   as string;
+    const address  = (formData.get('address') as string)?.trim();
+
+    const phone = normalizePhone(rawPhone || '');
+
+    if (!name || !phone || !address) {
+      return { success: false, error: 'Nama, nomor HP, dan alamat wajib diisi' };
+    }
+    if (phone.length < 10 || phone.length > 15) {
+      return { success: false, error: 'Nomor HP tidak valid' };
+    }
+
+    const duplicate = await db.user.findFirst({ where: { phone, id: { not: id } } });
+    if (duplicate) {
+      return { success: false, error: 'Nomor HP sudah terdaftar' };
+    }
+
+    await db.user.update({
+      where: { id },
+      data: { name, phone, address },
+    });
+
+    revalidatePath('/admin/sales-customers/customers');
+    return { success: true };
+  } catch (error) {
+    console.error('Update non-member error:', error);
+    return { success: false, error: 'Gagal update pelanggan' };
+  }
+}
+
+export async function upgradeToMemberAction(id: string, formData: FormData) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMINISTRATOR') {
+      return { success: false, error: 'Unauthorized - Admin access required' };
+    }
+
+    const password = formData.get('password') as string;
+    const email    = normalizeEmail(formData.get('email') as string);
+
+    if (!password || password.length < 6) {
+      return { success: false, error: 'Password minimal 6 karakter' };
+    }
+
+    const user = await db.user.findUnique({ where: { id, role: 'NON_MEMBER' } });
+    if (!user) {
+      return { success: false, error: 'Pelanggan tidak ditemukan' };
+    }
+
+    if (email) {
+      const existingEmail = await db.user.findFirst({ where: { email, id: { not: id } } });
+      if (existingEmail) {
+        return { success: false, error: 'Email sudah terdaftar' };
+      }
+    }
+
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.user.update({
+      where: { id },
+      data: { role: 'MEMBER', password: hashedPassword, email: email || null },
+    });
+
+    revalidatePath('/admin/sales-customers/customers');
+    return { success: true };
+  } catch (error) {
+    console.error('Upgrade to member error:', error);
+    return { success: false, error: 'Gagal upgrade ke member' };
+  }
+}
+
+export async function getCustomerPurchaseHistory(customerId: string, page: number = 1, pageSize: number = 10) {
+  const session = await auth();
+  if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+    throw new Error('Unauthorized');
+  }
+
+  const skip = (page - 1) * pageSize;
+
+  const [sales, total] = await Promise.all([
+    db.sale.findMany({
+      where: { customerId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+      include: {
+        items: {
+          include: {
+            variant: { include: { product: true } },
+          },
+        },
+      },
+    }),
+    db.sale.count({ where: { customerId } }),
+  ]);
+
+  return {
+    sales: sales.map((s: typeof sales[number]) => ({
+      ...s,
+      subtotal: Number(s.subtotal),
+      discount: Number(s.discount),
+      tax: Number(s.tax),
+      ongkir: Number(s.ongkir),
+      total: Number(s.total),
+      items: s.items.map((i: typeof s.items[number]) => ({
+        ...i,
+        price: Number(i.price),
+        subtotal: Number(i.subtotal),
+      })),
+    })),
+    total,
+  };
+}

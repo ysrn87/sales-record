@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
-import { Eye, Award } from 'lucide-react';
+import { Eye, Award, ShoppingBag } from 'lucide-react';
 import { CustomerDetailsDialog } from './customer-details-dialog';
 import { CustomerDialog } from './customer-dialog';
 import { CustomerDeleteButton } from './customer-delete-button';
 import { PointsHistoryDialog } from './points-history-dialog';
+import { PurchaseHistoryDialog } from './purchase-history-dialog';
 import { Pagination } from '@/components/ui/pagination';
 
 interface Customer {
@@ -52,6 +53,8 @@ export function CustomersTable({
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [pointsHistoryCustomer, setPointsHistoryCustomer] = useState<Customer | null>(null);
   const [pointsHistoryOpen, setPointsHistoryOpen] = useState(false);
+  const [purchaseHistoryCustomer, setPurchaseHistoryCustomer] = useState<Customer | null>(null);
+  const [purchaseHistoryOpen, setPurchaseHistoryOpen] = useState(false);
 
   const totalPages = Math.ceil(totalItems / pageSize);
 
@@ -164,6 +167,14 @@ export function CustomersTable({
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setPurchaseHistoryCustomer(customer); setPurchaseHistoryOpen(true); }}
+                            title="Riwayat pembelian"
+                          >
+                            <ShoppingBag className="h-4 w-4" />
+                          </Button>
                           <CustomerDialog
                             mode="edit"
                             customer={{
@@ -223,6 +234,15 @@ export function CustomersTable({
           currentPoints={pointsHistoryCustomer.points}
           open={pointsHistoryOpen}
           onOpenChange={setPointsHistoryOpen}
+        />
+      )}
+
+      {purchaseHistoryCustomer && (
+        <PurchaseHistoryDialog
+          customerId={purchaseHistoryCustomer.id}
+          customerName={purchaseHistoryCustomer.name}
+          open={purchaseHistoryOpen}
+          onOpenChange={setPurchaseHistoryOpen}
         />
       )}
     </>

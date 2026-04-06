@@ -32,21 +32,52 @@ export default async function MemberPurchasesPage() {
 
   // Serialize Decimal fields to numbers for client component
   const serializedPurchases = purchases.map((purchase: typeof purchases[number]) => ({
-    ...purchase,
+    id: purchase.id,
+    saleNumber: purchase.saleNumber,
+    customerId: purchase.customerId,
+    cashierId: purchase.cashierId,
+    paymentMethod: purchase.paymentMethod,
+    paymentStatus: purchase.paymentStatus,
+    notes: purchase.notes,
+    pointsEarned: purchase.pointsEarned,
+    pointsRedeemed: purchase.pointsRedeemed,
+    createdAt: purchase.createdAt,
     subtotal: Number(purchase.subtotal),
     discount: Number(purchase.discount),
     tax: Number(purchase.tax),
     total: Number(purchase.total),
     items: purchase.items.map((item: typeof purchase.items[number]) => ({
-      ...item,
+      id: item.id,
+      saleId: item.saleId,
+      variantId: item.variantId,
+      quantity: item.quantity,
       price: Number(item.price),
       subtotal: Number(item.subtotal),
       variant: {
-        ...item.variant,
+        id: item.variant.id,
+        productId: item.variant.productId,
+        name: item.variant.name,
+        sku: item.variant.sku,
+        stock: item.variant.stock,
+        lowStock: item.variant.lowStock,
+        isActive: item.variant.isActive,
+        points: item.variant.points,
+        createdAt: item.variant.createdAt,
+        updatedAt: item.variant.updatedAt,
         price: Number(item.variant.price),
         cost: Number(item.variant.cost),
-      }
-    }))
+        product: {
+          id: item.variant.product.id,
+          name: item.variant.product.name,
+          sku: item.variant.product.sku,
+          description: item.variant.product.description,
+          createdById: item.variant.product.createdById,
+          updatedById: item.variant.product.updatedById,
+          createdAt: item.variant.product.createdAt,
+          updatedAt: item.variant.product.updatedAt,
+        },
+      },
+    })),
   }));
 
   return (

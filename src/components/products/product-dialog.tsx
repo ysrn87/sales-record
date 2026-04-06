@@ -74,7 +74,7 @@ export function ProductDialog({ mode, product, trigger }: ProductDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' ? 'Create New Product' : 'Edit Product'}
