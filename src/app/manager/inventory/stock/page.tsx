@@ -206,29 +206,11 @@ async function getAllStock(params: {
     db.productVariant.count({ where }),
   ]);
 
+  // Convert Decimal to Number for client component
   const serializedItems = items.map((item: typeof items[number]) => ({
-    id: item.id,
-    productId: item.productId,
-    name: item.name,
-    sku: item.sku,
-    stock: item.stock,
-    lowStock: item.lowStock,
-    isActive: item.isActive,
-    points: item.points,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
+    ...item,
     price: Number(item.price),
     cost: Number(item.cost),
-    product: {
-      id: item.product.id,
-      name: item.product.name,
-      sku: item.product.sku,
-      description: item.product.description,
-      createdById: item.product.createdById,
-      updatedById: item.product.updatedById,
-      createdAt: item.product.createdAt,
-      updatedAt: item.product.updatedAt,
-    },
   }));
 
   return { items: serializedItems, total };

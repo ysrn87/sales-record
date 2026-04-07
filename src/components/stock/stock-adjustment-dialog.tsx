@@ -89,7 +89,7 @@ export function StockAdjustmentDialog({ variantId, variantName, currentStock }: 
           Atur Stok
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Atur Stok</DialogTitle>
         </DialogHeader>

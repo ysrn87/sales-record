@@ -10,7 +10,7 @@ datasource db {
 model User {
   id               String         @id @default(cuid())
   email            String?        @unique
-  password         String?
+  password         String
   name             String
   phone            String         @unique(map: "users_phone_unique")
   birthday         DateTime?
@@ -88,25 +88,38 @@ model Settings {
   @@map("settings")
 }
 
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String   @unique
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sales     Sale[]   @relation("NonMemberSales")
+
+  @@map("customers")
+}
+
 model Sale {
-  id             String        @id @default(cuid())
-  saleNumber     String        @unique
-  customerId     String?
-  cashierId      String
-  subtotal       Decimal       @db.Decimal(10, 2)
-  discount       Decimal       @default(0) @db.Decimal(10, 2)
-  tax            Decimal       @default(0) @db.Decimal(10, 2)
-  ongkir         Decimal       @default(0) @db.Decimal(10, 2)
-  total          Decimal       @db.Decimal(10, 2)
-  paymentMethod  String
-  paymentStatus  PaymentStatus @default(PAID)
-  notes          String?
-  pointsEarned   Int           @default(0)
-  createdAt      DateTime      @default(now())
-  pointsRedeemed Int           @default(0)
-  items          SaleItem[]
-  cashier        User          @relation("CashierSales", fields: [cashierId], references: [id])
-  customer       User?         @relation("CustomerSales", fields: [customerId], references: [id])
+  id                  String     @id @default(cuid())
+  saleNumber          String     @unique
+  customerId          String?
+  nonMemberCustomerId String?
+  cashierId           String
+  subtotal            Decimal    @db.Decimal(10, 2)
+  discount            Decimal    @default(0) @db.Decimal(10, 2)
+  tax                 Decimal    @default(0) @db.Decimal(10, 2)
+  ongkir              Decimal    @default(0) @db.Decimal(10, 2)
+  total               Decimal    @db.Decimal(10, 2)
+  paymentMethod       String
+  notes               String?
+  pointsEarned        Int        @default(0)
+  createdAt           DateTime   @default(now())
+  pointsRedeemed      Int        @default(0)
+  items               SaleItem[]
+  cashier             User       @relation("CashierSales", fields: [cashierId], references: [id])
+  customer            User?      @relation("CustomerSales", fields: [customerId], references: [id])
+  nonMemberCustomer   Customer?  @relation("NonMemberSales", fields: [nonMemberCustomerId], references: [id])
 
   @@map("sales")
 }
@@ -155,13 +168,6 @@ enum Role {
   ADMINISTRATOR
   MANAGER
   MEMBER
-  NON_MEMBER
-}
-
-enum PaymentStatus {
-  PAID
-  PENDING
-  UNPAID
 }
 
 enum TransactionType {

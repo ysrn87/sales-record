@@ -4,10 +4,11 @@ import { Users, ShoppingCart, Award } from 'lucide-react';
 import { CustomersTable } from '@/components/customers/customers-table';
 
 async function getCustomerStats() {
-  const [totalCustomers, totalPurchases, totalPoints] = await Promise.all([
+  const [totalMembers, totalNonMembers, totalPurchases, totalPoints] = await Promise.all([
     db.user.count({
       where: { role: 'MEMBER' },
     }),
+    db.customer.count(),
     db.sale.count(),
     db.user.aggregate({
       _sum: { points: true },
@@ -16,7 +17,7 @@ async function getCustomerStats() {
   ]);
 
   return {
-    totalCustomers,
+    totalCustomers: totalMembers + totalNonMembers,
     totalPurchases,
     totalPoints: totalPoints._sum.points || 0,
   };
@@ -25,11 +26,10 @@ async function getCustomerStats() {
 async function getAllCustomers(page: number = 1, limit: number = 10) {
   const skip = (page - 1) * limit;
   
-  const [customers, total] = await Promise.all([
+  // Fetch both members and non-members
+  const [members, nonMembers] = await Promise.all([
     db.user.findMany({
       where: { role: 'MEMBER' },
-      skip,
-      take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
         sales: {
@@ -45,19 +45,54 @@ async function getAllCustomers(page: number = 1, limit: number = 10) {
         },
       },
     }),
-    db.user.count({ where: { role: 'MEMBER' } }),
+    db.customer.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        sales: {
+          select: {
+            id: true,
+            total: true,
+          },
+        },
+        _count: {
+          select: {
+            sales: true,
+          },
+        },
+      },
+    }),
   ]);
 
-  // Convert Decimal to Number for client component
-  const serializedCustomers = customers.map((customer: typeof customers[number]) => ({
+  // Convert and add type field
+  const serializedMembers = members.map((customer) => ({
     ...customer,
-    sales: customer.sales.map((sale: typeof customer.sales[number]) => ({
+    type: 'member' as const,
+    sales: customer.sales.map((sale) => ({
       id: sale.id,
       total: Number(sale.total),
     })),
   }));
 
-  return { customers: serializedCustomers, total };
+  const serializedNonMembers = nonMembers.map((customer) => ({
+    ...customer,
+    type: 'non-member' as const,
+    sales: customer.sales.map((sale) => ({
+      id: sale.id,
+      total: Number(sale.total),
+    })),
+  }));
+
+  // Combine both types and sort by creation date
+  const allCustomers = [...serializedMembers, ...serializedNonMembers].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+
+  const total = allCustomers.length;
+  
+  // Apply pagination
+  const paginatedCustomers = allCustomers.slice(skip, skip + limit);
+
+  return { customers: paginatedCustomers, total };
 }
 
 export default async function ManagerCustomersPage({

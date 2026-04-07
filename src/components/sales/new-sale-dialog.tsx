@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { createSaleAction } from '@/actions/sales';
-import { createNonMemberAction } from '@/actions/members';
 import { Plus, Trash2, Gift, X, User, Search, ChevronDown, UserPlus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { QuickAddCustomerForm } from '@/components/customers/quick-add-customer-form';
 
 interface SaleItem {
   variantId: string;
@@ -35,23 +35,25 @@ interface NewSaleDialogProps {
     id: string;
     name: string;
     points: number;
-    isMember?: boolean;
   }>;
-  nonMembers?: Array<{
+  nonMemberCustomers?: Array<{
     id: string;
     name: string;
     phone: string;
+    address: string;
   }>;
   conversionRate?: number;
 }
 
-export function NewSaleDialog({ variants, customers, nonMembers = [], conversionRate = 1000 }: NewSaleDialogProps) {
+export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], conversionRate = 1000 }: NewSaleDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<SaleItem[]>([]);
   const [selectedVariantId, setSelectedVariantId] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [customerId, setCustomerId] = useState<string>('');
+  const [nonMemberCustomerId, setNonMemberCustomerId] = useState<string>('');
+  const [customerType, setCustomerType] = useState<'member' | 'non-member' | ''>(''); // Track customer type
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
   const [paymentStatus, setPaymentStatus] = useState<string>('PAID');
   const [discount, setDiscount] = useState<number>(0);
@@ -59,6 +61,8 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
   const [ongkir, setOngkir] = useState<number>(0);
   const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
   const [notes, setNotes] = useState<string>('');
+  const [showQuickAddForm, setShowQuickAddForm] = useState(false);
+  const [localNonMemberCustomers, setLocalNonMemberCustomers] = useState(nonMemberCustomers);
 
   // Improved UI states
   const [customerSearch, setCustomerSearch] = useState('');
@@ -66,29 +70,60 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
 
-  // Inline non-member add form
-  const [showAddNonMember, setShowAddNonMember] = useState(false);
-  const [nmName, setNmName] = useState('');
-  const [nmPhone, setNmPhone] = useState('');
-  const [nmAddress, setNmAddress] = useState('');
-  const [nmLoading, setNmLoading] = useState(false);
-  const [localNonMembers, setLocalNonMembers] = useState(nonMembers);
-
   const { toast } = useToast();
 
   const selectedCustomer = customers.find(c => c.id === customerId);
+  const selectedNonMemberCustomer = localNonMemberCustomers.find(c => c.id === nonMemberCustomerId);
   const availablePoints = selectedCustomer?.points || 0;
   const pointDiscount = pointsToRedeem * conversionRate;
 
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const total = subtotal - discount - pointDiscount + tax + ongkir;
 
-  const pointsEarned = (customerId && customerId !== 'WALK_IN' && pointsToRedeem === 0)
+  // Points are only earned for members who are not redeeming points
+  const pointsEarned = (customerId && customerType === 'member' && pointsToRedeem === 0)
     ? items.reduce((sum, item) => {
       const variant = variants.find(v => v.id === item.variantId);
       return sum + (variant?.points ?? 0) * item.quantity;
     }, 0)
     : 0;
+
+  const handleCustomerChange = (value: string) => {
+    // Reset both customer IDs first
+    setCustomerId('');
+    setNonMemberCustomerId('');
+    setPointsToRedeem(0);
+    setIsCustomerDropdownOpen(false);
+    setCustomerSearch('');
+
+    // Check if it's a member or non-member
+    const isMember = customers.some(c => c.id === value);
+    const isNonMember = localNonMemberCustomers.some(c => c.id === value);
+
+    if (value === 'WALK_IN') {
+      setCustomerType('');
+    } else if (isMember) {
+      setCustomerId(value);
+      setCustomerType('member');
+    } else if (isNonMember) {
+      setNonMemberCustomerId(value);
+      setCustomerType('non-member');
+    }
+  };
+
+  const handleQuickAddSuccess = (customer: { id: string; name: string; phone: string; address: string }) => {
+    // Add to local list
+    setLocalNonMemberCustomers(prev => [customer, ...prev]);
+    // Select the new customer
+    setNonMemberCustomerId(customer.id);
+    setCustomerType('non-member');
+    setShowQuickAddForm(false);
+    setIsCustomerDropdownOpen(false);
+    toast({
+      title: 'Success!',
+      description: 'Customer added and selected.',
+    });
+  };
 
   const handleDiscountChange = (value: number) => {
     const totalDiscount = value + pointDiscount;
@@ -138,13 +173,6 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
     } else {
       setPointsToRedeem(value);
     }
-  };
-
-  const handleCustomerChange = (value: string) => {
-    setCustomerId(value);
-    setPointsToRedeem(0);
-    setIsCustomerDropdownOpen(false);
-    setCustomerSearch('');
   };
 
   const handleProductSelect = (variantId: string) => {
@@ -199,7 +227,7 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
   };
 
   const handleSubmit = async () => {
-    if (!customerId) {
+    if (!customerId && !nonMemberCustomerId) {
       toast({
         title: 'Error',
         description: 'Please select a customer.',
@@ -221,6 +249,16 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
       toast({
         title: 'Error',
         description: 'Discount cannot exceed subtotal amount.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Points redemption only for members
+    if (pointsToRedeem > 0 && !customerId) {
+      toast({
+        title: 'Error',
+        description: 'Points redemption is only available for members.',
         variant: 'destructive',
       });
       return;
@@ -262,14 +300,15 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
           quantity: item.quantity,
           price: item.price,
         })),
-        customerId: customerId === 'WALK_IN' ? null : customerId,
+        customerId: customerId || null,
+        nonMemberCustomerId: nonMemberCustomerId || null,
         paymentMethod,
         paymentStatus,
         discount,
         tax,
         ongkir,
         notes,
-        pointsRedeemed: customerId !== 'WALK_IN' ? pointsToRedeem : 0,
+        pointsRedeemed: customerId ? pointsToRedeem : 0,
       });
 
       if (result.success) {
@@ -279,6 +318,8 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
         });
         setItems([]);
         setCustomerId('');
+        setNonMemberCustomerId('');
+        setCustomerType('');
         setDiscount(0);
         setTax(0);
         setOngkir(0);
@@ -304,60 +345,27 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
     }
   };
 
-  // Handle inline non-member creation
-  const handleAddNonMember = async () => {
-    if (!nmName.trim() || !nmPhone.trim() || !nmAddress.trim()) {
-      toast({ title: 'Error', description: 'Nama, HP, dan alamat wajib diisi.', variant: 'destructive' });
-      return;
-    }
-    setNmLoading(true);
-    try {
-      const fd = new FormData();
-      fd.append('name', nmName.trim());
-      fd.append('phone', nmPhone.replace(/\s/g, ''));
-      fd.append('address', nmAddress.trim());
-      const result = await createNonMemberAction(fd);
-      if (result.success && result.customerId) {
-        const newNm = { id: result.customerId, name: result.customerName || nmName.trim(), phone: nmPhone };
-        setLocalNonMembers(prev => [newNm, ...prev]);
-        handleCustomerChange(result.customerId);
-        setShowAddNonMember(false);
-        setNmName(''); setNmPhone(''); setNmAddress('');
-        setIsCustomerDropdownOpen(false);
-        toast({ title: 'Berhasil!', description: `${newNm.name} ditambahkan dan dipilih.` });
-      } else {
-        toast({ title: 'Error', description: (result as any).error || 'Gagal menambah pelanggan.', variant: 'destructive' });
-      }
-    } catch {
-      toast({ title: 'Error', description: 'Terjadi kesalahan.', variant: 'destructive' });
-    } finally {
-      setNmLoading(false);
-    }
-  };
-
   // Get customer display name
   const getCustomerDisplayName = () => {
-    if (!customerId) return null;
-    if (customerId === 'WALK_IN') return 'Pelanggan Umum';
-    const member = customers.find(c => c.id === customerId);
-    if (member) return member.name;
-    const nm = localNonMembers.find(c => c.id === customerId);
-    if (nm) return `${nm.name} (Non-Member)`;
-    return '';
+    if (customerType === 'member' && selectedCustomer) {
+      return selectedCustomer.name;
+    }
+    if (customerType === 'non-member' && selectedNonMemberCustomer) {
+      return selectedNonMemberCustomer.name;
+    }
+    return null;
   };
 
   // Get selected variant
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
 
-  // Filter members
-  const filteredCustomers = customers.filter(c =>
+  // Filter customers - combine members and non-members
+  const filteredMembers = customers.filter(c =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
-  // Filter non-members
-  const filteredNonMembers = localNonMembers.filter(c =>
-    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    c.phone.includes(customerSearch)
+  const filteredNonMembers = localNonMemberCustomers.filter(c =>
+    c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
 
   // Filter variants
@@ -382,7 +390,7 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
           Penjualan Baru
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+      <DialogContent aria-describedby={undefined} className="w-[95vw] max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Penjualan Baru</DialogTitle>
         </DialogHeader>
@@ -394,57 +402,30 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
               Customer <span className="text-red-500">*</span>
             </Label>
 
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setShowAddNonMember(v => !v); }}
-              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-medium"
-            >
-              <UserPlus className="w-3 h-3" />
-              Tambah Baru
-            </button>
 
-            {/* Inline add non-member form */}
-            {showAddNonMember && (
-              <div className="p-3 border-b bg-blue-50 space-y-2" onClick={(e) => e.stopPropagation()}>
-                <input
-                  className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  placeholder="Nama *"
-                  value={nmName}
-                  onChange={(e) => setNmName(e.target.value.replace(/\b\w/g, c => c.toUpperCase()))}
-                  disabled={nmLoading}
+            {/* Quick Add Customer Button */}
+            {!showQuickAddForm && (
+              <div className="p-2 border-b flex-shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowQuickAddForm(true)}
+                  className="w-full gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add New Customer
+                </Button>
+              </div>
+            )}
+
+            {/* Quick Add Form */}
+            {showQuickAddForm && (
+              <div className="p-2 border-b flex-shrink-0">
+                <QuickAddCustomerForm
+                  onSuccess={handleQuickAddSuccess}
+                  onCancel={() => setShowQuickAddForm(false)}
                 />
-                <input
-                  className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  placeholder="No. HP *"
-                  inputMode="tel"
-                  value={nmPhone}
-                  onChange={(e) => setNmPhone(e.target.value.replace(/[^0-9+\s]/g, ''))}
-                  disabled={nmLoading}
-                />
-                <input
-                  className="w-full border rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
-                  placeholder="Alamat *"
-                  value={nmAddress}
-                  onChange={(e) => setNmAddress(e.target.value)}
-                  disabled={nmLoading}
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAddNonMember}
-                    disabled={nmLoading}
-                    className="flex-1 bg-blue-600 text-white text-xs py-1.5 rounded hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {nmLoading ? 'Menyimpan...' : 'Simpan & Pilih'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowAddNonMember(false); setNmName(''); setNmPhone(''); setNmAddress(''); }}
-                    className="px-3 border text-xs py-1.5 rounded hover:bg-gray-100"
-                  >
-                    Batal
-                  </button>
-                </div>
               </div>
             )}
 
@@ -453,22 +434,27 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
               <button
                 type="button"
                 onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
-                className={`flex items-center gap-2 w-full min-h-[44px] px-3 py-2 border rounded-md text-left transition-colors ${!customerId ? 'text-gray-400 hover:bg-gray-50' : 'hover:bg-gray-50'
-                  } ${!customerId ? 'border-gray-300' : 'border-blue-300 bg-blue-50'}`}
+                className={`flex items-center gap-2 w-full min-h-[44px] px-3 py-2 border rounded-md text-left transition-colors ${!customerId && !nonMemberCustomerId ? 'text-gray-400 hover:bg-gray-50' : 'hover:bg-gray-50'
+                  } ${!customerId && !nonMemberCustomerId ? 'border-gray-300' : 'border-blue-300 bg-blue-50'}`}
               >
-                {customerId ? (
+                {(customerId || nonMemberCustomerId) ? (
                   // Selected state - show as chip
                   <div className="flex items-center gap-2 bg-blue-100 text-blue-900 px-2 py-1 rounded-md min-w-0 break-words line-clamp-2">
                     <User className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm font-medium break-words line-clamp-2">{getCustomerDisplayName()}</span>
-                    {selectedCustomer && (
+                    {selectedCustomer && customerType === 'member' && (
                       <span className="text-xs text-blue-600 whitespace-nowrap">• {selectedCustomer.points} poin</span>
+                    )}
+                    {customerType === 'non-member' && (
+                      <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded whitespace-nowrap">Non-Member</span>
                     )}
                     <X
                       className="w-4 h-4 ml-1 cursor-pointer hover:text-blue-700 flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCustomerId('');
+                        setNonMemberCustomerId('');
+                        setCustomerType('');
                         setPointsToRedeem(0);
                       }}
                     />
@@ -482,9 +468,9 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
 
               {/* Dropdown */}
               {isCustomerDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 border rounded-md bg-white shadow-lg">
+                <div className="absolute z-50 w-full mt-1 border rounded-md bg-white shadow-lg max-h-[400px] overflow-hidden flex flex-col">
                   {/* Search input */}
-                  <div className="p-2 border-b">
+                  <div className="p-2 border-b flex-shrink-0">
                     <div className="relative">
                       <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -498,80 +484,72 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
                   </div>
 
                   {/* Options list */}
-                  <div className="max-h-[280px] overflow-y-auto">
-                    {/* Walk-in option */}
-                    {(!customerSearch || 'pelanggan umum'.includes(customerSearch.toLowerCase())) && (
-                      <div
-                        onClick={() => handleCustomerChange('WALK_IN')}
-                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${customerId === 'WALK_IN' ? 'bg-blue-50' : ''}`}
-                      >
-                        <span className="text-sm">Pelanggan Umum</span>
-                        {customerId === 'WALK_IN' && (
-                          <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
+                  <div className="overflow-y-auto flex-1">
+                    {/* Members Section */}
+                    {filteredMembers.length > 0 && (
+                      <>
+                        <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 sticky top-0">
+                          MEMBERS ({filteredMembers.length})
+                        </div>
+                        {filteredMembers.map((customer) => (
+                          <div
+                            key={customer.id}
+                            onClick={() => handleCustomerChange(customer.id)}
+                            className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${customerId === customer.id ? 'bg-blue-50' : ''
+                              }`}
+                          >
+                            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                              <span className="font-medium text-sm truncate">{customer.name}</span>
+                              <span className="text-xs text-gray-500">{customer.points} points</span>
+                            </div>
+                            {customerId === customer.id && (
+                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        ))}
+                      </>
                     )}
 
-                    {/* Member list */}
-                    {filteredCustomers.length > 0 && (
-                      <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 border-b">
-                        Member
-                      </div>
+                    {/* Non-Members Section */}
+                    {filteredNonMembers.length > 0 && (
+                      <>
+                        <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 sticky top-0">
+                          NON-MEMBERS ({filteredNonMembers.length})
+                        </div>
+                        {filteredNonMembers.map((customer) => (
+                          <div
+                            key={customer.id}
+                            onClick={() => handleCustomerChange(customer.id)}
+                            className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${nonMemberCustomerId === customer.id ? 'bg-blue-50' : ''
+                              }`}
+                          >
+                            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm truncate">{customer.name}</span>
+                                <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded flex-shrink-0">Non-Member</span>
+                              </div>
+                              <span className="text-xs text-gray-500">{customer.phone}</span>
+                            </div>
+                            {nonMemberCustomerId === customer.id && (
+                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </>
                     )}
-                    {filteredCustomers.map((customer) => (
-                      <div
-                        key={customer.id}
-                        onClick={() => handleCustomerChange(customer.id)}
-                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${customerId === customer.id ? 'bg-blue-50' : ''}`}
-                      >
-                        <div className="flex flex-col min-w-0 flex-1 mr-2">
-                          <span className="font-medium text-sm truncate">{customer.name}</span>
-                          <span className="text-xs text-gray-500">{customer.points} points</span>
-                        </div>
-                        {customerId === customer.id && (
-                          <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-                    {/* Non-member section */}
-                    <div className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide bg-gray-50 border-y flex items-center justify-between">
-                      <span>Non-Member</span>
-                    </div>
-
-                    {filteredNonMembers.map((nm) => (
-                      <div
-                        key={nm.id}
-                        onClick={() => handleCustomerChange(nm.id)}
-                        className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${customerId === nm.id ? 'bg-blue-50' : ''}`}
-                      >
-                        <div className="flex flex-col min-w-0 flex-1 mr-2">
-                          <span className="font-medium text-sm truncate">{nm.name}</span>
-                          <span className="text-xs text-gray-500">{nm.phone}</span>
-                        </div>
-                        {customerId === nm.id && (
-                          <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    ))}
 
                     {/* No results */}
                     {customerSearch &&
-                      filteredCustomers.length === 0 &&
-                      filteredNonMembers.length === 0 &&
-                      !'pelanggan umum'.includes(customerSearch.toLowerCase()) && (
+                      filteredMembers.length === 0 &&
+                      filteredNonMembers.length === 0 && (
                         <div className="p-4 text-center text-sm text-gray-500">
                           No customers found
                         </div>
@@ -583,7 +561,7 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
           </div>
 
           {/* Product Selection - Only show if customer is selected */}
-          {customerId && (
+          {(customerId || nonMemberCustomerId) && (
             <>
               <div className="grid gap-2">
                 <Label className="text-sm font-medium">Tambah Produk</Label>
@@ -829,7 +807,7 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
               </div>
 
               {/* Point Redemption - Only for members */}
-              {customerId && customerId !== 'WALK_IN' && (
+              {customerType === 'member' && customerId && (
                 <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
                   <div className="flex items-center gap-2">
                     <Gift className="w-5 h-5 text-purple-600" />
@@ -927,8 +905,8 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
                     <span>Total:</span>
                     <span>{formatCurrency(Math.max(0, total))}</span>
                   </div>
-                  {/* Add this block */}
-                  {items.length > 0 && customerId && customerId !== 'WALK_IN' && (
+                  {/* Points earned - only for members */}
+                  {items.length > 0 && customerType === 'member' && customerId && (
                     <div className={`flex items-center justify-between px-3 py-2 rounded-md text-sm mt-1 ${pointsToRedeem > 0
                       ? 'bg-orange-50 border border-orange-200'
                       : pointsEarned > 0
@@ -965,7 +943,7 @@ export function NewSaleDialog({ variants, customers, nonMembers = [], conversion
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || items.length === 0 || !customerId || (discount + pointDiscount) > subtotal || total < 0}
+            disabled={loading || items.length === 0 || (!customerId && !nonMemberCustomerId) || (discount + pointDiscount) > subtotal || total < 0}
             className="w-full sm:w-auto"
           >
             {loading ? 'Processing...' : 'Complete Sale'}

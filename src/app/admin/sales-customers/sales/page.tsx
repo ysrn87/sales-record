@@ -113,23 +113,16 @@ async function getSales(params: {
       subtotal: Number(sale.subtotal),
       discount: Number(sale.discount),
       tax: Number(sale.tax),
-      ongkir: Number(sale.ongkir),
+      ongkir: Number((sale as any).ongkir),
       total: Number(sale.total),
       items: sale.items.map((item: typeof sale.items[number]) => ({
         ...item,
         price: Number(item.price),
         subtotal: Number(item.subtotal),
         variant: {
-          id: item.variant.id,
-          name: item.variant.name,
-          sku: item.variant.sku,
-          stock: item.variant.stock,
+          ...item.variant,
           price: Number(item.variant.price),
           cost: Number(item.variant.cost),
-          points: item.variant.points,
-          product: {
-            name: item.variant.product.name,
-          },
         },
       })),
     })),
@@ -166,19 +159,27 @@ async function getVariants() {
 }
 
 async function getCustomers() {
-  const [members, nonMembers] = await Promise.all([
-    db.user.findMany({
-      where: { role: 'MEMBER' },
-      select: { id: true, name: true, points: true },
-      orderBy: { name: 'asc' },
-    }),
-    db.user.findMany({
-      where: { role: 'NON_MEMBER' },
-      select: { id: true, name: true, phone: true },
-      orderBy: { name: 'asc' },
-    }),
-  ]);
-  return { members, nonMembers };
+  return db.user.findMany({
+    where: { role: 'MEMBER' },
+    select: {
+      id: true,
+      name: true,
+      points: true,
+    },
+    orderBy: { name: 'asc' },
+  });
+}
+
+async function getNonMemberCustomers() {
+  return db.customer.findMany({
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      address: true,
+    },
+    orderBy: { name: 'asc' },
+  });
 }
 
 export default async function AdminSalesPage({
@@ -201,17 +202,24 @@ export default async function AdminSalesPage({
   const paymentStatus = params.paymentStatus || 'all';
   const sort = params.sort || 'date_desc';
 
-  const [{ sales, total }, variants, { members, nonMembers }, conversionRate] = await Promise.all([
+  const [{ sales, total }, variants, customers, nonMemberCustomers, conversionRate] = await Promise.all([
     getSales({ page, limit, search, payment, paymentStatus, sort }),
     getVariants(),
     getCustomers(),
+    getNonMemberCustomers(),
     getPointsConversionRate(),
   ]);
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <NewSaleDialog variants={variants} customers={members} nonMembers={nonMembers} conversionRate={conversionRate} />
+        <NewSaleDialog
+          variants={variants}
+          customers={customers}
+          nonMemberCustomers={nonMemberCustomers}
+          conversionRate={conversionRate}
+          aria-describedby={undefined}
+        />
       </div>
 
       <Card>

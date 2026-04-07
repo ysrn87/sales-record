@@ -6,37 +6,68 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { upgradeToMemberAction } from '@/actions/members';
-import { ArrowUpCircle } from 'lucide-react';
+import { upgradeToMemberAction } from '@/actions/customers';
+import { UserCog } from 'lucide-react';
 
 interface UpgradeToMemberDialogProps {
   customer: {
     id: string;
     name: string;
     phone: string;
+    address: string;
   };
-  onSuccess?: () => void;
 }
 
-export function UpgradeToMemberDialog({ customer, onSuccess }: UpgradeToMemberDialogProps) {
+export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
   const { toast } = useToast();
 
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    setEmailError(val && !valid ? 'Please enter a valid email address' : '');
+  };
+
   const handleSubmit = async (formData: FormData) => {
+    const email = formData.get('email') as string;
+    
+    // Validate email if provided
+    if (email && emailError) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await upgradeToMemberAction(customer.id, formData);
+      
       if (result.success) {
-        toast({ title: 'Berhasil!', description: `${customer.name} telah diupgrade menjadi Member.` });
+        toast({
+          title: 'Success!',
+          description: `${customer.name} has been upgraded to member.`,
+        });
         setOpen(false);
-        if (onSuccess) onSuccess();
+        // Reload the page to reflect changes
+        window.location.reload();
       } else {
-        toast({ title: 'Error', description: result.error || 'Gagal upgrade.', variant: 'destructive' });
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to upgrade customer.',
+          variant: 'destructive',
+        });
       }
-    } catch {
-      toast({ title: 'Error', description: 'Terjadi kesalahan tidak terduga.', variant: 'destructive' });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -45,49 +76,109 @@ export function UpgradeToMemberDialog({ customer, onSuccess }: UpgradeToMemberDi
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Upgrade ke Member">
-          <ArrowUpCircle className="w-4 h-4" />
+        <Button variant="outline" size="sm" className="gap-2">
+          <UserCog className="w-4 h-4" />
+          Upgrade to Member
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px]" aria-describedby={undefined}>
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Upgrade ke Member</DialogTitle>
-          <p className="text-sm text-muted-foreground pt-1">
-            Upgrade <strong>{customer.name}</strong> ({customer.phone}) menjadi Member dengan akun login.
-          </p>
+          <DialogTitle>Upgrade to Member</DialogTitle>
         </DialogHeader>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <p className="text-sm text-blue-900">
+            <strong>{customer.name}</strong> will be upgraded to a member account with:
+          </p>
+          <ul className="text-sm text-blue-700 mt-2 space-y-1 list-disc list-inside">
+            <li>Login access to member portal</li>
+            <li>Ability to earn and redeem loyalty points</li>
+            <li>Purchase history preserved</li>
+          </ul>
+        </div>
+
         <form action={handleSubmit}>
           <div className="grid gap-4 py-4">
+            {/* Display existing info */}
             <div className="grid gap-2">
-              <Label htmlFor="email">Email (Opsional)</Label>
-              <Input
-                id="email" name="email" type="email"
-                placeholder="john@example.com"
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const valid = !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-                  setEmailError(valid ? '' : 'Format email tidak valid');
-                }}
-                disabled={loading}
-              />
-              {emailError && <p className="text-xs text-red-500">{emailError}</p>}
+              <Label className="text-muted-foreground">Name</Label>
+              <Input value={customer.name} disabled className="bg-gray-50" />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="password">Password <span className="text-red-500">*</span></Label>
-              <Input
-                id="password" name="password" type="password" required
-                placeholder="Min. 6 karakter" minLength={6}
-                disabled={loading}
-              />
-              <p className="text-xs text-muted-foreground">Member akan login menggunakan No. HP dan password ini.</p>
+              <Label className="text-muted-foreground">Phone</Label>
+              <Input value={customer.phone} disabled className="bg-gray-50" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-muted-foreground">Address</Label>
+              <Input value={customer.address} disabled className="bg-gray-50" />
+            </div>
+
+            {/* New fields for member upgrade */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="password">
+                  Password <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="Min. 6 characters"
+                  minLength={6}
+                  disabled={loading}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This will be used for member login
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  onChange={handleEmailChange}
+                  pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+                  disabled={loading}
+                />
+                {emailError && <p className="text-xs text-red-500">{emailError}</p>}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="birthday">Birthday</Label>
+                <Input
+                  id="birthday"
+                  name="birthday"
+                  type="date"
+                  max={new Date().toISOString().split('T')[0]}
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="photoUrl">Photo URL</Label>
+                <Input
+                  id="photoUrl"
+                  name="photoUrl"
+                  type="url"
+                  placeholder="https://example.com/photo.jpg"
+                  disabled={loading}
+                />
+              </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>Batal</Button>
-            <Button type="submit" disabled={loading || !!emailError} className="bg-blue-600 hover:bg-blue-700">
-              {loading ? 'Memproses...' : 'Upgrade ke Member'}
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Upgrading...' : 'Upgrade to Member'}
             </Button>
           </DialogFooter>
         </form>

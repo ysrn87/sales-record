@@ -205,7 +205,7 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
               <div>

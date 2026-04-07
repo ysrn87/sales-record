@@ -115,7 +115,7 @@ export function CashflowDialog({ mode = 'create', transaction, trigger }: Cashfl
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent  aria-describedby={undefined} className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' ? 'Pencatatan Arus Kas' : 'Edit Transaction'}

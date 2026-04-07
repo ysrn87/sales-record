@@ -141,7 +141,7 @@ export function VariantDialog({ mode, productId, variant, trigger }: VariantDial
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
             {mode === 'create' ? 'Tambah Varian Baru' : 'Edit Varian'}

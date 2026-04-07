@@ -11,14 +11,10 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:seed:admin": "tsx prisma/seed-admin-only.ts",
-    "db:reset": "tsx prisma/reset-database.ts",
-    "db:reset:seed": "tsx prisma/reset-database.ts && tsx prisma/seed.ts",
-    "db:reset:admin": "tsx prisma/reset-database.ts && tsx prisma/seed-admin-only.ts",
-    "db:clean": "tsx prisma/clean-database.ts",
-    "db:clean:seed": "tsx prisma/clean-database.ts && tsx prisma/seed.ts",
-    "db:clean:admin": "tsx prisma/clean-database.ts && tsx prisma/seed-admin-only.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed:admin": "tsx scripts/seed-admin-only.ts",
+    "db:reset": "tsx scripts/reset-db.ts",
+    "db:clean": "tsx scripts/clean-db.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

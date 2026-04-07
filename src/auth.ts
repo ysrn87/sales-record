@@ -26,7 +26,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
 
-        if (!user || !user.password) {
+        if (!user) {
           return null;
         }
 

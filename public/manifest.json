@@ -1,7 +1,7 @@
 {
-  "name": "Sales Record",
-  "short_name": "Sales Points",
-  "description": "Product and Sales Recording System",
+  "name": "Dapur Lisa",
+  "short_name": "Dapur Lisa",
+  "description": "Product Catalogue",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -28,13 +28,6 @@
   "categories": ["business", "productivity"],
   "screenshots": [],
   "shortcuts": [
-    {
-      "name": "New Sale",
-      "short_name": "Sale",
-      "description": "Create a new sale",
-      "url": "/admin/sales-customers/sales",
-      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
-    },
     {
       "name": "Member Points",
       "short_name": "Points",

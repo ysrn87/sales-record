@@ -16,6 +16,7 @@ interface SaleItemInput {
 interface CreateSaleInput {
   items: SaleItemInput[];
   customerId: string | null;
+  nonMemberCustomerId?: string | null; // For non-member customers
   paymentMethod: string;
   paymentStatus?: string;
   discount?: number;
@@ -32,7 +33,7 @@ export async function createSaleAction(input: CreateSaleInput) {
       return { success: false, error: 'Unauthorized' };
     }
 
-    const { items, customerId, paymentMethod, paymentStatus = 'PAID', discount = 0, tax = 0, ongkir = 0, notes, pointsRedeemed = 0 } = input;
+    const { items, customerId, nonMemberCustomerId, paymentMethod, paymentStatus = 'PAID', discount = 0, tax = 0, ongkir = 0, notes, pointsRedeemed = 0 } = input;
 
     if (!items || items.length === 0) {
       return { success: false, error: 'No items in sale' };
@@ -42,12 +43,22 @@ export async function createSaleAction(input: CreateSaleInput) {
       return { success: false, error: 'Notes cannot exceed 500 characters' };
     }
 
-    // Validate point redemption
+    // Validate that only one customer type is selected
+    if (customerId && nonMemberCustomerId) {
+      return { success: false, error: 'Cannot assign both member and non-member customer to a sale' };
+    }
+
+    // Validate point redemption (only for members)
     if (pointsRedeemed > 0 && customerId) {
       const availablePoints = await getAvailablePoints(customerId);
       if (pointsRedeemed > availablePoints) {
         return { success: false, error: `Insufficient points. Available: ${availablePoints}` };
       }
+    }
+
+    // Points cannot be redeemed for non-member customers
+    if (pointsRedeemed > 0 && nonMemberCustomerId) {
+      return { success: false, error: 'Points redemption is only available for members' };
     }
 
     // Validate stock availability and calculate points
@@ -65,8 +76,8 @@ export async function createSaleAction(input: CreateSaleInput) {
         return { success: false, error: `Insufficient stock for ${variant.name}` };
       }
 
-      // Calculate points from variant points (only if NOT redeeming points)
-      if (pointsRedeemed === 0) {
+      // Calculate points from variant points (only for members and if NOT redeeming points)
+      if (customerId && pointsRedeemed === 0) {
         pointsEarned += variant.points * item.quantity;
       }
     }
@@ -103,6 +114,7 @@ export async function createSaleAction(input: CreateSaleInput) {
           saleNumber: generateSaleNumber(),
           cashierId: session.user.id,
           customerId,
+          nonMemberCustomerId,
           subtotal,
           discount,
           tax,
@@ -144,7 +156,7 @@ export async function createSaleAction(input: CreateSaleInput) {
         });
       }
 
-      // Handle points (either earn or redeem, not both)
+      // Handle points (only for members: either earn or redeem, not both)
       if (customerId) {
         if (pointsRedeemed > 0) {
           // Redeem points
