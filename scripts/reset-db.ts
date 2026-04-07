@@ -8,14 +8,15 @@
  * - All stock movements
  * - All cashflow records
  * - All point history
- * - Settings (optional)
  * 
  * What will be PRESERVED:
  * - All user accounts (admin, manager, members)
  * - All non-member customers
  * - All products and variants
- * - Product stock levels will be preserved
- * - User points will be reset to 0
+ * 
+ * What will be RESET:
+ * - User points → 0
+ * - All product variant stock → 0
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -41,13 +42,14 @@ async function resetDatabase() {
   console.log('  ❌ All sales and sale items');
   console.log('  ❌ All stock movements');
   console.log('  ❌ All cashflow records');
-  console.log('  ❌ All point history');
-  console.log('  ❌ User points (will be reset to 0)\n');
+  console.log('  ❌ All point history\n');
+  console.log('What will be reset:');
+  console.log('  🔁 User points → 0');
+  console.log('  🔁 All product variant stock → 0\n');
   console.log('What will be preserved:');
   console.log('  ✅ All user accounts (admin, manager, members)');
   console.log('  ✅ All non-member customers');
-  console.log('  ✅ All products and variants');
-  console.log('  ✅ Product stock levels\n');
+  console.log('  ✅ All products and variants\n');
 
   const answer = await question('Type "RESET TRANSACTIONS" to confirm: ');
 
@@ -67,13 +69,13 @@ async function resetDatabase() {
     console.log(`  📊 Users: ${stats.users}`);
     console.log(`  📊 Non-member customers: ${stats.customers}`);
     console.log(`  📊 Products: ${stats.products}`);
-    console.log(`  📊 Product variants: ${stats.variants}`);
+    console.log(`  📊 Product variants: ${stats.variants} (stock will be reset to 0)`);
     console.log(`  📊 Sales: ${stats.sales}`);
     console.log(`  📊 Stock movements: ${stats.stockMovements}`);
     console.log(`  📊 Cashflow records: ${stats.cashflows}`);
     console.log(`  📊 Point history records: ${stats.pointHistory}\n`);
 
-    const finalConfirm = await question(`Delete ${stats.sales} sales and related transactions? (yes/no): `);
+    const finalConfirm = await question(`Delete ${stats.sales} sales and reset all stocks to 0? (yes/no): `);
     
     if (finalConfirm.toLowerCase() !== 'yes') {
       console.log('\n❌ Operation cancelled.\n');
@@ -81,6 +83,8 @@ async function resetDatabase() {
       await prisma.$disconnect();
       process.exit(0);
     }
+
+    const deleteSettings = await question('Delete all settings too? (yes/no): ');
 
     await prisma.$transaction(async (tx) => {
       // Delete in correct order to respect foreign key constraints
@@ -111,10 +115,15 @@ async function resetDatabase() {
       });
       console.log(`   ✓ Reset points for ${updatedUsers.count} users`);
 
-      // Optional: Delete settings (ask user)
-      console.log('\n⚠️  Settings cleanup...');
-      const deleteSettings = await question('Delete all settings? (yes/no): ');
+      console.log('🔄 Resetting all product variant stock to 0...');
+      const updatedVariants = await tx.productVariant.updateMany({
+        data: { stock: 0 },
+      });
+      console.log(`   ✓ Reset stock for ${updatedVariants.count} product variants`);
+
+      // Optional: Delete settings
       if (deleteSettings.toLowerCase() === 'yes') {
+        console.log('🗑️  Deleting settings...');
         const deletedSettings = await tx.settings.deleteMany();
         console.log(`   ✓ Deleted ${deletedSettings.count} settings`);
       } else {
@@ -130,7 +139,7 @@ async function resetDatabase() {
     console.log(`  ✅ Users: ${finalStats.users}`);
     console.log(`  ✅ Non-member customers: ${finalStats.customers}`);
     console.log(`  ✅ Products: ${finalStats.products}`);
-    console.log(`  ✅ Product variants: ${finalStats.variants}\n`);
+    console.log(`  ✅ Product variants: ${finalStats.variants} (all stock reset to 0)\n`);
 
     console.log('Transaction data after reset:');
     console.log(`  📊 Sales: ${finalStats.sales}`);

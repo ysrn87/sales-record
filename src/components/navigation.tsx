@@ -30,7 +30,7 @@ export function Navigation({ role, userName }: NavigationProps) {
     { href: '/admin', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
     {
       href: '/admin/sales-customers/sales',
-      label: 'Penjualan & Member',
+      label: 'Penjualan & Pelanggan',
       icon: <ShoppingCart className="w-4 h-4" />,
       matchPaths: ['/admin/sales-customers/sales', '/admin/sales-customers/customers'],
     },
@@ -58,7 +58,7 @@ export function Navigation({ role, userName }: NavigationProps) {
     { href: '/manager', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
     {
       href: '/manager/sales-customers/sales',
-      label: 'Penjualan & Member',
+      label: 'Penjualan & Pelanggan',
       icon: <ShoppingCart className="w-4 h-4" />,
       matchPaths: ['/manager/sales-customers/sales', '/manager/sales-customers/customers'],
     },
