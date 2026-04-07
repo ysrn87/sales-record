@@ -9,6 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getCustomerPurchaseHistory } from '@/actions/customers';
+import { CustomerDialog } from './customer-dialog';
+import { CustomerDeleteButton } from './customer-delete-button';
+import { NonMemberDialog } from './non-member-dialog';
+import { UpgradeToMemberDialog } from './upgrade-to-member-dialog';
+import { DeleteConfirmDialog } from '@/components/delete-confirm-dialog';
+import { deleteNonMemberCustomerAction } from '@/actions/customers';
 
 interface MemberCustomer {
   id: string;
@@ -52,9 +58,10 @@ interface CustomerDetailsDialogProps {
   customer: Customer;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  showActions?: boolean;
 }
 
-export function CustomerDetailsDialog({ customer, open, onOpenChange }: CustomerDetailsDialogProps) {
+export function CustomerDetailsDialog({ customer, open, onOpenChange, showActions = false }: CustomerDetailsDialogProps) {
   const [purchaseHistory, setPurchaseHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -84,7 +91,55 @@ export function CustomerDetailsDialog({ customer, open, onOpenChange }: Customer
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Customer Profile</DialogTitle>
+          <div className="flex items-center justify-between gap-4 pr-6">
+            <DialogTitle>Customer Profile</DialogTitle>
+            {showActions && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {isMember ? (
+                  <>
+                    <CustomerDialog
+                      mode="edit"
+                      customer={{
+                        id: customer.id,
+                        name: customer.name,
+                        phone: customer.phone,
+                        address: customer.address ?? undefined,
+                        email: customer.email ?? undefined,
+                        birthday: customer.birthday ?? undefined,
+                        photoUrl: customer.photoUrl ?? undefined,
+                        points: customer.points,
+                      }}
+                    />
+                    <CustomerDeleteButton customerId={customer.id} />
+                  </>
+                ) : (
+                  <>
+                    <NonMemberDialog
+                      customer={{
+                        id: customer.id,
+                        name: customer.name,
+                        phone: customer.phone,
+                        address: customer.address,
+                      }}
+                    />
+                    <UpgradeToMemberDialog
+                      customer={{
+                        id: customer.id,
+                        name: customer.name,
+                        phone: customer.phone,
+                        address: customer.address,
+                      }}
+                    />
+                    <DeleteConfirmDialog
+                      title="Hapus Non-Member"
+                      description="Yakin ingin menghapus pelanggan ini? Pelanggan tidak dapat dihapus jika memiliki riwayat transaksi."
+                      onConfirm={() => deleteNonMemberCustomerAction(customer.id)}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </DialogHeader>
         
         <Tabs defaultValue="profile" className="w-full flex-1 flex flex-col overflow-hidden">

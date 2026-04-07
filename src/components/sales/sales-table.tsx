@@ -3,11 +3,9 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { SaleDetailsDialog } from './sale-details-dialog';
 import { Pagination } from '@/components/ui/pagination';
-import { Eye } from 'lucide-react';
 
 interface SalesTableProps {
   sales: any[];
@@ -64,24 +62,27 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
           <TableRow>
             <TableHead>Sale ID #</TableHead>
             <TableHead>Tanggal</TableHead>
-            <TableHead>Member</TableHead>
+            <TableHead>Customer</TableHead>
             <TableHead>Cashier</TableHead>
             <TableHead>Item</TableHead>
             <TableHead>Total</TableHead>
             <TableHead>Pembayaran</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Note</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className='text-xs'>
           {sales.map((sale) => {
             const statusCfg = paymentStatusConfig[sale.paymentStatus] ?? paymentStatusConfig.PAID;
             return (
-              <TableRow key={sale.id}>
+              <TableRow
+                key={sale.id}
+                className="cursor-pointer hover:bg-muted/60"
+                onClick={() => handleViewDetails(sale)}
+              >
                 <TableCell className="font-medium truncate">{sale.saleNumber}</TableCell>
                 <TableCell className='truncate'>{formatDateTime(sale.createdAt)}</TableCell>
-                <TableCell className='truncate'>{sale.customer?.name || 'Pelanggan-umum'}</TableCell>
+                <TableCell className='truncate'>{sale.customer?.name || sale.nonMemberCustomer?.name || 'Pelanggan-umum'}</TableCell>
                 <TableCell>{sale.cashier.name}</TableCell>
                 <TableCell>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} unit</TableCell>
                 <TableCell>{formatCurrency(sale.total)}</TableCell>
@@ -96,15 +97,6 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
                   </span>
                 </TableCell>
                 <TableCell className='truncate'>{sale.notes || '-'}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleViewDetails(sale)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                  </Button>
-                </TableCell>
               </TableRow>
             );
           })}

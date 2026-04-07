@@ -3,14 +3,10 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
-import { Eye, Award } from 'lucide-react';
+import { Award } from 'lucide-react';
 import { CustomerDetailsDialog } from './customer-details-dialog';
-import { CustomerDialog } from './customer-dialog';
-import { CustomerDeleteButton } from './customer-delete-button';
-import { UpgradeToMemberDialog } from './upgrade-to-member-dialog';
 import { PointsHistoryDialog } from './points-history-dialog';
 import { Pagination } from '@/components/ui/pagination';
 
@@ -114,14 +110,13 @@ export function CustomersTable({
               <TableHead>Poin</TableHead>
               <TableHead>Total Pembelian</TableHead>
               <TableHead>Total Belanja</TableHead>
-              <TableHead>Member Since</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Terdaftar</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className='text-xs'>
             {customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="text-center text-muted-foreground">
+                <TableCell colSpan={10} className="text-center text-muted-foreground">
                   Tidak ditemukan pelanggan
                 </TableCell>
               </TableRow>
@@ -131,13 +126,17 @@ export function CustomersTable({
                 const isMember = customer.type === 'member';
 
                 return (
-                  <TableRow key={customer.id}>
+                  <TableRow
+                    key={customer.id}
+                    className="cursor-pointer hover:bg-muted/60"
+                    onClick={() => handleViewDetails(customer)}
+                  >
                     <TableCell className="font-medium">
                       <p className='truncate'>
                         {customer.name}
                       </p>  
                     </TableCell>
-                    <TableCell>
+                    <TableCell className='truncate'>
                       {isMember ? (
                         <Badge variant="default" className="bg-blue-600">Member</Badge>
                       ) : (
@@ -167,7 +166,7 @@ export function CustomersTable({
                     <TableCell>
                       {isMember ? (
                         <button
-                          onClick={() => handleViewPoints(customer as MemberCustomer)}
+                          onClick={(e) => { e.stopPropagation(); handleViewPoints(customer as MemberCustomer); }}
                           className="flex items-center gap-1 hover:text-yellow-700 transition-colors cursor-pointer group"
                           title="Lihat riwayat poin"
                         >
@@ -186,59 +185,6 @@ export function CustomersTable({
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(customer.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {showActions ? (
-                        // Admin view with Edit & Delete
-                        <div className="flex gap-2 justify-end flex-wrap">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetails(customer)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {isMember ? (
-                            <>
-                              <CustomerDialog
-                                mode="edit"
-                                customer={{
-                                  id: customer.id,
-                                  name: customer.name,
-                                  phone: customer.phone,
-                                  address: customer.address ?? undefined,
-                                  email: customer.email ?? undefined,
-                                  birthday: customer.birthday ?? undefined,
-                                  photoUrl: customer.photoUrl ?? undefined,
-                                  points: customer.points,
-                                }}
-                              />
-                              <CustomerDeleteButton customerId={customer.id} />
-                            </>
-                          ) : (
-                            <>
-                              <UpgradeToMemberDialog
-                                customer={{
-                                  id: customer.id,
-                                  name: customer.name,
-                                  phone: customer.phone,
-                                  address: customer.address,
-                                }}
-                              />
-                            </>
-                          )}
-                        </div>
-                      ) : (
-                        // Manager view (view only)
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetails(customer)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-
-                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -262,6 +208,7 @@ export function CustomersTable({
           customer={selectedCustomer}
           open={detailsOpen}
           onOpenChange={setDetailsOpen}
+          showActions={showActions}
         />
       )}
 

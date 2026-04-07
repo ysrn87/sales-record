@@ -128,7 +128,33 @@ export async function getCustomerPurchaseHistory(customerId: string, isNonMember
       },
     });
 
-    return sales;
+    return sales.map((sale) => {
+      const { subtotal, discount, tax, total, items, ...saleRest } = sale;
+      const ongkir = (saleRest as any).ongkir;
+      delete (saleRest as any).ongkir;
+      return {
+        ...saleRest,
+        subtotal: Number(subtotal),
+        discount: Number(discount),
+        tax: Number(tax),
+        ongkir: Number(ongkir),
+        total: Number(total),
+        items: items.map((item) => {
+          const { price, subtotal: itemSubtotal, variant, ...itemRest } = item;
+          const { price: variantPrice, cost: variantCost, ...variantRest } = variant;
+          return {
+            ...itemRest,
+            price: Number(price),
+            subtotal: Number(itemSubtotal),
+            variant: {
+              ...variantRest,
+              price: Number(variantPrice),
+              cost: Number(variantCost),
+            },
+          };
+        }),
+      };
+    });
   } catch (error) {
     console.error('Get purchase history error:', error);
     throw error;
@@ -147,10 +173,22 @@ export async function upgradeToMemberAction(customerId: string, formData: FormDa
     const email = formData.get('email') as string;
     const birthday = formData.get('birthday') as string;
     const photoUrl = formData.get('photoUrl') as string;
+    const name = (formData.get('name') as string)?.trim();
+    const phone = (formData.get('phone') as string)?.trim();
+    const address = (formData.get('address') as string)?.trim();
 
     // Validation
     if (!password || password.length < 6) {
       return { success: false, error: 'Password is required (min. 6 characters)' };
+    }
+    if (!name) {
+      return { success: false, error: 'Name is required' };
+    }
+    if (!phone) {
+      return { success: false, error: 'Phone number is required' };
+    }
+    if (!address) {
+      return { success: false, error: 'Address is required' };
     }
 
     // Get non-member customer
@@ -167,7 +205,7 @@ export async function upgradeToMemberAction(customerId: string, formData: FormDa
 
     // Check if phone already exists in User table
     const existingUser = await db.user.findFirst({
-      where: { phone: customer.phone },
+      where: { phone },
     });
 
     if (existingUser) {
@@ -194,9 +232,9 @@ export async function upgradeToMemberAction(customerId: string, formData: FormDa
       // Create new member user
       const newUser = await tx.user.create({
         data: {
-          name: customer.name,
-          phone: customer.phone,
-          address: customer.address,
+          name,
+          phone,
+          address,
           email: email ? email.trim().toLowerCase() : null,
           birthday: birthday ? new Date(birthday) : null,
           photoUrl: photoUrl || null,
@@ -229,6 +267,55 @@ export async function upgradeToMemberAction(customerId: string, formData: FormDa
   } catch (error) {
     console.error('Upgrade to member error:', error);
     return { success: false, error: 'Failed to upgrade customer to member' };
+  }
+}
+
+// Update non-member customer
+export async function updateNonMemberCustomerAction(customerId: string, formData: FormData) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMINISTRATOR') {
+      return { success: false, error: 'Unauthorized - Admin access required' };
+    }
+
+    const name = (formData.get('name') as string)?.trim();
+    const rawPhone = formData.get('phone') as string;
+    const address = (formData.get('address') as string)?.trim();
+
+    const phone = normalizePhone(rawPhone);
+
+    if (!name || !phone || !address) {
+      return { success: false, error: 'Name, phone, and address are required' };
+    }
+
+    if (phone.length < 10 || phone.length > 15) {
+      return { success: false, error: 'Please enter a valid phone number' };
+    }
+
+    // Check for duplicate phone, excluding this customer
+    const [existingUser, existingCustomer] = await Promise.all([
+      db.user.findFirst({ where: { phone } }),
+      db.customer.findFirst({ where: { phone, NOT: { id: customerId } } }),
+    ]);
+
+    if (existingUser) {
+      return { success: false, error: 'Phone number already registered as member' };
+    }
+    if (existingCustomer) {
+      return { success: false, error: 'Phone number already used by another customer' };
+    }
+
+    await db.customer.update({
+      where: { id: customerId },
+      data: { name, phone, address },
+    });
+
+    revalidatePath('/admin/customers');
+    revalidatePath('/manager/customers');
+    return { success: true };
+  } catch (error) {
+    console.error('Update non-member customer error:', error);
+    return { success: false, error: 'Failed to update customer' };
   }
 }
 

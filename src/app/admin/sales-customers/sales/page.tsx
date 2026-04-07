@@ -86,6 +86,15 @@ async function getSales(params: {
           select: {
             name: true,
             email: true,
+            phone: true,
+            address: true,
+          },
+        },
+        nonMemberCustomer: {
+          select: {
+            name: true,
+            phone: true,
+            address: true,
           },
         },
         cashier: {
@@ -108,24 +117,33 @@ async function getSales(params: {
   ]);
 
   return {
-    sales: sales.map((sale: typeof sales[number]) => ({
-      ...sale,
-      subtotal: Number(sale.subtotal),
-      discount: Number(sale.discount),
-      tax: Number(sale.tax),
-      ongkir: Number((sale as any).ongkir),
-      total: Number(sale.total),
-      items: sale.items.map((item: typeof sale.items[number]) => ({
-        ...item,
-        price: Number(item.price),
-        subtotal: Number(item.subtotal),
-        variant: {
-          ...item.variant,
-          price: Number(item.variant.price),
-          cost: Number(item.variant.cost),
-        },
-      })),
-    })),
+    sales: sales.map((sale: typeof sales[number]) => {
+      const { subtotal, discount, tax, total, items, ...saleRest } = sale;
+      const ongkir = (saleRest as any).ongkir;
+      delete (saleRest as any).ongkir;
+      return {
+        ...saleRest,
+        subtotal: Number(subtotal),
+        discount: Number(discount),
+        tax: Number(tax),
+        ongkir: Number(ongkir),
+        total: Number(total),
+        items: items.map((item: typeof items[number]) => {
+          const { price, subtotal: itemSubtotal, variant, ...itemRest } = item;
+          const { price: variantPrice, cost: variantCost, ...variantRest } = variant;
+          return {
+            ...itemRest,
+            price: Number(price),
+            subtotal: Number(itemSubtotal),
+            variant: {
+              ...variantRest,
+              price: Number(variantPrice),
+              cost: Number(variantCost),
+            },
+          };
+        }),
+      };
+    }),
     total,
   };
 }

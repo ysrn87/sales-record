@@ -27,6 +27,12 @@ interface SaleDetailsDialogProps {
       name: string;
       email: string;
       phone?: string | null;
+      address?: string | null;
+    } | null;
+    nonMemberCustomer: {
+      name: string;
+      phone: string;
+      address: string;
     } | null;
     cashier: {
       name: string;
@@ -104,6 +110,12 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
             ${sale.customer ? `
               <p><strong>${sale.customer.name}</strong></p>
               <p>${sale.customer.email}</p>
+              ${sale.customer.phone ? `<p>${sale.customer.phone}</p>` : ''}
+              ${sale.customer.address ? `<p>${sale.customer.address}</p>` : ''}
+            ` : sale.nonMemberCustomer ? `
+              <p><strong>${sale.nonMemberCustomer.name}</strong></p>
+              ${sale.nonMemberCustomer.phone ? `<p>${sale.nonMemberCustomer.phone}</p>` : ''}
+              ${sale.nonMemberCustomer.address ? `<p>${sale.nonMemberCustomer.address}</p>` : ''}
             ` : `
               <p><strong>Pelanggan Umum</strong></p>
             `}
@@ -236,6 +248,12 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                   <>
                     <p className="text-sm font-medium">{sale.customer.name}</p>
                     <p className="text-xs sm:text-sm text-gray-600">{sale.customer.email}</p>
+                    {sale.customer.phone && (
+                      <p className="text-xs sm:text-sm text-gray-600">{sale.customer.phone}</p>
+                    )}
+                    {sale.customer.address && (
+                      <p className="text-xs sm:text-sm text-gray-600">{sale.customer.address}</p>
+                    )}
                     {sale.pointsEarned > 0 && (
                       <p className="text-xs sm:text-sm text-blue-600 mt-2">+{sale.pointsEarned} poin bertambah</p>
                     )}
@@ -244,6 +262,16 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                         <Gift className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600" />
                         <p className="text-xs sm:text-sm text-purple-600 font-medium">-{pointsRedeemed} poin ditukar</p>
                       </div>
+                    )}
+                  </>
+                ) : sale.nonMemberCustomer ? (
+                  <>
+                    <p className="text-sm font-medium">{sale.nonMemberCustomer.name}</p>
+                    {sale.nonMemberCustomer.phone && (
+                      <p className="text-xs sm:text-sm text-gray-600">{sale.nonMemberCustomer.phone}</p>
+                    )}
+                    {sale.nonMemberCustomer.address && (
+                      <p className="text-xs sm:text-sm text-gray-600">{sale.nonMemberCustomer.address}</p>
                     )}
                   </>
                 ) : (

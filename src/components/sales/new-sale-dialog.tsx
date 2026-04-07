@@ -415,7 +415,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                   className="w-full gap-2"
                 >
                   <UserPlus className="w-4 h-4" />
-                  Add New Customer
+                  Tambah Pelanggan Baru
                 </Button>
               </div>
             )}
@@ -466,7 +466,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                 )}
                 <ChevronDown className="w-4 h-4 ml-auto text-gray-400 flex-shrink-0" />
               </button>
-
+                
               {/* Dropdown */}
               {isCustomerDropdownOpen && (
                 <div className="absolute z-50 w-full mt-1 border rounded-md bg-white shadow-lg max-h-[400px] overflow-hidden flex flex-col">

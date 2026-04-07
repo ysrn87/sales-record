@@ -184,7 +184,7 @@ export default async function AdminCustomersPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Member</CardTitle>
+          <CardTitle>Daftar Pelanggan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar */}

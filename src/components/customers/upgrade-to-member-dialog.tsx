@@ -22,6 +22,9 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [name, setName] = useState(customer.name);
+  const [phone, setPhone] = useState(customer.phone);
+  const [address, setAddress] = useState(customer.address);
   const { toast } = useToast();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,11 +77,10 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(customer.name); setPhone(customer.phone); setAddress(customer.address); } }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" title="Upgrade to Member">
           <UserCog className="w-4 h-4" />
-          Upgrade to Member
         </Button>
       </DialogTrigger>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[500px]">
@@ -88,7 +90,7 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
           <p className="text-sm text-blue-900">
-            <strong>{customer.name}</strong> will be upgraded to a member account with:
+            <strong>{name || customer.name}</strong> will be upgraded to a member account with:
           </p>
           <ul className="text-sm text-blue-700 mt-2 space-y-1 list-disc list-inside">
             <li>Login access to member portal</li>
@@ -99,20 +101,47 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
 
         <form action={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Display existing info */}
+            {/* Editable customer info */}
             <div className="grid gap-2">
-              <Label className="text-muted-foreground">Name</Label>
-              <Input value={customer.name} disabled className="bg-gray-50" />
+              <Label htmlFor="name">
+                Nama <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
 
             <div className="grid gap-2">
-              <Label className="text-muted-foreground">Phone</Label>
-              <Input value={customer.phone} disabled className="bg-gray-50" />
+              <Label htmlFor="phone">
+                Telepon/WA <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
 
             <div className="grid gap-2">
-              <Label className="text-muted-foreground">Address</Label>
-              <Input value={customer.address} disabled className="bg-gray-50" />
+              <Label htmlFor="address">
+                Alamat <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="address"
+                name="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
 
             {/* New fields for member upgrade */}
