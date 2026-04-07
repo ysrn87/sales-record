@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PaymentStatus } from '@prisma/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +56,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   const [nonMemberCustomerId, setNonMemberCustomerId] = useState<string>('');
   const [customerType, setCustomerType] = useState<'member' | 'non-member' | ''>(''); // Track customer type
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
-  const [paymentStatus, setPaymentStatus] = useState<string>('PAID');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(PaymentStatus.PAID);
   const [discount, setDiscount] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
   const [ongkir, setOngkir] = useState<number>(0);
@@ -721,7 +722,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
               {/* Payment Status */}
               <div className="grid gap-2">
                 <Label htmlFor="paymentStatus" className="text-sm">Status Pembayaran</Label>
-                <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

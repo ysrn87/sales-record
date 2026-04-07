@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { PaymentStatus } from '@prisma/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +56,7 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
   const [items, setItems] = useState<SaleItem[]>([]);
   const [customerId, setCustomerId] = useState<string>(sale.customerId || 'WALK_IN');
   const [paymentMethod, setPaymentMethod] = useState<string>(sale.paymentMethod);
-  const [paymentStatus, setPaymentStatus] = useState<string>(sale.paymentStatus || 'PAID');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>((sale.paymentStatus as PaymentStatus) || PaymentStatus.PAID);
   const [discount, setDiscount] = useState<number>(sale.discount);
   const [tax, setTax] = useState<number>(sale.tax);
   const [ongkir, setOngkir] = useState<number>(sale.ongkir || 0);
@@ -208,7 +209,7 @@ export function EditSaleDialog({ sale, conversionRate = 1000, open, onOpenChange
 
             <div className="grid gap-2">
               <Label htmlFor="paymentStatus">Status Pembayaran</Label>
-              <Select value={paymentStatus} onValueChange={setPaymentStatus} disabled={loading}>
+              <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)} disabled={loading}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
