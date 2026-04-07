@@ -112,6 +112,7 @@ model Sale {
   ongkir              Decimal    @default(0) @db.Decimal(10, 2)
   total               Decimal    @db.Decimal(10, 2)
   paymentMethod       String
+  paymentStatus       PaymentStatus @default(PAID)
   notes               String?
   pointsEarned        Int        @default(0)
   createdAt           DateTime   @default(now())
@@ -173,4 +174,10 @@ enum Role {
 enum TransactionType {
   INCOME
   EXPENSE
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  UNPAID
 }

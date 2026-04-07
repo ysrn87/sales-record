@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db';
 import { auth } from '@/auth';
+import { PaymentStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { generateSaleNumber } from '@/lib/utils';
 import { getAvailablePoints, getPointsExpiryDate } from '@/lib/points-utils';
@@ -18,7 +19,7 @@ interface CreateSaleInput {
   customerId: string | null;
   nonMemberCustomerId?: string | null; // For non-member customers
   paymentMethod: string;
-  paymentStatus?: string;
+  paymentStatus?: PaymentStatus;
   discount?: number;
   tax?: number;
   ongkir?: number;
@@ -121,7 +122,7 @@ export async function createSaleAction(input: CreateSaleInput) {
           ongkir,
           total,
           paymentMethod,
-          paymentStatus: paymentStatus as any,
+          paymentStatus: paymentStatus as PaymentStatus,
           notes,
           pointsEarned: customerId && pointsRedeemed === 0 ? pointsEarned : 0,
           pointsRedeemed: customerId ? pointsRedeemed : 0,
@@ -378,7 +379,7 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
           ongkir,
           total,
           paymentMethod,
-          paymentStatus: paymentStatus as any,
+          paymentStatus: paymentStatus as PaymentStatus,
           notes,
           pointsEarned: customerId ? pointsEarned : 0,
           pointsRedeemed: pointsRedeemed,
