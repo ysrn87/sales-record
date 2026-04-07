@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Home, Package, ShoppingCart, Settings, Menu, X, LogOut, Coins } from 'lucide-react';
+import { Home, Package, ShoppingCart, Settings, LogOut, Coins } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { logoutAction } from '@/actions/auth';
 
 interface NavItem {
   href: string;
   label: string;
+  mobileLabel: string;
   icon: React.ReactNode;
   matchPaths?: string[];
 }
@@ -19,60 +20,67 @@ interface NavigationProps {
   userName?: string;
 }
 
+type CompactLevel = 'full' | 'medium' | 'compact' | 'icons-only';
+
 export function Navigation({ role, userName }: NavigationProps) {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [compactLevel, setCompactLevel] = useState<'full' | 'medium' | 'compact' | 'icons-only'>('full');
+  const [compactLevel, setCompactLevel] = useState<CompactLevel>('full');
   const navContainerRef = useRef<HTMLDivElement>(null);
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const adminNavItems: NavItem[] = [
-    { href: '/admin', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
+    { href: '/admin', label: 'Dashboard', mobileLabel: 'Dashboard', icon: <Home className="w-4 h-4" /> },
     {
       href: '/admin/sales-customers/sales',
       label: 'Penjualan & Pelanggan',
+      mobileLabel: 'Penjualan',
       icon: <ShoppingCart className="w-4 h-4" />,
       matchPaths: ['/admin/sales-customers/sales', '/admin/sales-customers/customers'],
     },
     {
       href: '/admin/inventory/products',
       label: 'Inventori',
+      mobileLabel: 'Inventori',
       icon: <Package className="w-4 h-4" />,
       matchPaths: ['/admin/inventory/products', '/admin/inventory/stock', '/admin/inventory/reports'],
     },
     {
       href: '/admin/finance/cashflow',
       label: 'Keuangan',
+      mobileLabel: 'Keuangan',
       icon: <Coins className="w-4 h-4" />,
       matchPaths: ['/admin/finance/cashflow', '/admin/finance/reports'],
     },
     {
       href: '/admin/settings/points',
       label: 'Pengaturan',
+      mobileLabel: 'Setelan',
       icon: <Settings className="w-4 h-4" />,
       matchPaths: ['/admin/settings/points', '/admin/settings/profile'],
     },
   ];
 
   const managerNavItems: NavItem[] = [
-    { href: '/manager', label: 'Dashboard', icon: <Home className="w-4 h-4" /> },
+    { href: '/manager', label: 'Dashboard', mobileLabel: 'Dashboard', icon: <Home className="w-4 h-4" /> },
     {
       href: '/manager/sales-customers/sales',
       label: 'Penjualan & Pelanggan',
+      mobileLabel: 'Penjualan',
       icon: <ShoppingCart className="w-4 h-4" />,
       matchPaths: ['/manager/sales-customers/sales', '/manager/sales-customers/customers'],
     },
     {
       href: '/manager/inventory/products',
       label: 'Inventori',
+      mobileLabel: 'Inventori',
       icon: <Package className="w-4 h-4" />,
       matchPaths: ['/manager/inventory/products', '/manager/inventory/stock'],
     },
   ];
 
   const memberNavItems: NavItem[] = [
-    { href: '/member', label: 'My Points', icon: <Home className="w-4 h-4" /> },
-    { href: '/member/purchases', label: 'Riwayat Belanja', icon: <ShoppingCart className="w-4 h-4" /> },
+    { href: '/member', label: 'My Points', mobileLabel: 'Points', icon: <Home className="w-4 h-4" /> },
+    { href: '/member/purchases', label: 'Riwayat Belanja', mobileLabel: 'Riwayat', icon: <ShoppingCart className="w-4 h-4" /> },
   ];
 
   const navItems =
@@ -86,6 +94,7 @@ export function Navigation({ role, userName }: NavigationProps) {
     return false;
   };
 
+  // Desktop compact level calculation
   useEffect(() => {
     const checkNavSpace = () => {
       if (!navContainerRef.current) return;
@@ -120,19 +129,12 @@ export function Navigation({ role, userName }: NavigationProps) {
     };
   }, [navItems.length]);
 
-  useEffect(() => { setMobileMenuOpen(false); }, [pathname]);
-
-  useEffect(() => {
-    document.body.style.overflow = '';
-    return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen]);
-
   const getNavItemStyles = () => {
     switch (compactLevel) {
-      case 'full':    return { gap: 'gap-2',   padding: 'px-4 py-2', textWidth: 'w-auto', textOpacity: 'opacity-100' };
-      case 'medium':  return { gap: 'gap-2',   padding: 'px-3 py-2', textWidth: 'w-auto', textOpacity: 'opacity-100' };
-      case 'compact': return { gap: 'gap-1.5', padding: 'px-2 py-2', textWidth: 'w-auto', textOpacity: 'opacity-100' };
-      case 'icons-only': return { gap: 'gap-1', padding: 'p-2.5',   textWidth: 'w-0',    textOpacity: 'opacity-0' };
+      case 'full':       return { gap: 'gap-2',   padding: 'px-4 py-2', textWidth: 'w-auto', textOpacity: 'opacity-100' };
+      case 'medium':     return { gap: 'gap-2',   padding: 'px-3 py-2', textWidth: 'w-auto', textOpacity: 'opacity-100' };
+      case 'compact':    return { gap: 'gap-1.5', padding: 'px-2 py-2', textWidth: 'w-auto', textOpacity: 'opacity-100' };
+      case 'icons-only': return { gap: 'gap-1',   padding: 'p-2.5',     textWidth: 'w-0',    textOpacity: 'opacity-0'   };
     }
   };
 
@@ -140,210 +142,197 @@ export function Navigation({ role, userName }: NavigationProps) {
   const showTooltip = compactLevel === 'icons-only';
 
   return (
-    <nav className="bg-white/95 border-b border-[#a8f0f8] sticky top-0 z-40 shadow-md backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <>
+      {/* ── TOP NAV (desktop full nav / mobile logo strip) ── */}
+      <nav className="bg-white/95 border-b border-[#a8f0f8] sticky top-0 z-40 shadow-md backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
 
-          {/* Left side - Logo and Desktop Nav */}
-          <div className="flex items-center flex-1 min-w-0 gap-3 sm:gap-4 lg:gap-6">
-            <div className="flex-shrink-0">
-              <h1 className="text-lg font-bold text-[#028697] whitespace-nowrap">
-                Sales Record
-              </h1>
-            </div>
+            {/* Left – Logo + Desktop Nav */}
+            <div className="flex items-center flex-1 min-w-0 gap-3 sm:gap-4 lg:gap-6">
+              <div className="flex-shrink-0">
+                <h1 className="text-lg font-bold text-[#028697] whitespace-nowrap">Sales Record</h1>
+              </div>
 
-            <div
-              ref={navContainerRef}
-              className="hidden lg:flex flex-1 items-center overflow-x-auto scrollbar-hide"
-            >
-              <div className={`flex items-center transition-all duration-500 ease-in-out ${navStyles.gap}`}>
-                {navItems.map((item) => {
-                  const isActive = isNavItemActive(item);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      title={showTooltip ? item.label : undefined}
-                      className={`
-                        relative z-10 group inline-flex items-center justify-center
-                        font-medium rounded-lg transition-all duration-500 ease-in-out
-                        ${navStyles.gap} ${navStyles.padding}
-                        ${isActive
-                          ? 'bg-[#028697] text-white shadow-lg scale-105'
-                          : 'text-gray-600 hover:text-[#028697] hover:bg-[#e0f9fc] hover:scale-105'
-                        }
-                      `}
-                    >
-                      <span className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
-                        {item.icon}
-                      </span>
-                      <span className={`
-                        whitespace-nowrap font-medium overflow-hidden
-                        transition-all duration-500 ease-in-out
-                        ${navStyles.textWidth} ${navStyles.textOpacity}
-                        ${compactLevel === 'compact' ? 'text-xs' : 'text-sm'}
-                      `}>
-                        {item.label}
-                      </span>
-                      <span className={`
-                        absolute inset-0 -z-10 rounded-lg
-                        group-hover:opacity-100 transition-opacity duration-300
-                        ${isActive ? 'bg-white/10' : 'bg-[#028697]/5'}
-                      `} />
-                    </Link>
-                  );
-                })}
+              {/* Desktop nav links */}
+              <div
+                ref={navContainerRef}
+                className="hidden lg:flex flex-1 items-center overflow-x-auto scrollbar-hide"
+              >
+                <div className={`flex items-center transition-all duration-500 ease-in-out ${navStyles.gap}`}>
+                  {navItems.map((item) => {
+                    const isActive = isNavItemActive(item);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        title={showTooltip ? item.label : undefined}
+                        className={`
+                          relative z-10 group inline-flex items-center justify-center
+                          font-medium rounded-lg transition-all duration-500 ease-in-out
+                          ${navStyles.gap} ${navStyles.padding}
+                          ${isActive
+                            ? 'bg-[#028697] text-white shadow-lg scale-105'
+                            : 'text-gray-600 hover:text-[#028697] hover:bg-[#e0f9fc] hover:scale-105'
+                          }
+                        `}
+                      >
+                        <span className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+                          {item.icon}
+                        </span>
+                        <span className={`
+                          whitespace-nowrap font-medium overflow-hidden
+                          transition-all duration-500 ease-in-out
+                          ${navStyles.textWidth} ${navStyles.textOpacity}
+                          ${compactLevel === 'compact' ? 'text-xs' : 'text-sm'}
+                        `}>
+                          {item.label}
+                        </span>
+                        <span className={`
+                          absolute inset-0 -z-10 rounded-lg
+                          group-hover:opacity-100 transition-opacity duration-300
+                          ${isActive ? 'bg-white/10' : 'bg-[#028697]/5'}
+                        `} />
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right side - User Info and Logout */}
-          <div className={`
-            hidden lg:flex items-center flex-shrink-0
-            transition-all duration-500 ease-in-out
-            ${compactLevel === 'icons-only' ? 'gap-1 ml-2' :
-              compactLevel === 'compact' ? 'gap-2 ml-3' : 'gap-3 ml-6'}
-          `}>
+            {/* Right – Desktop: user info + logout */}
             <div className={`
-              text-sm text-right transition-all duration-500 ease-in-out overflow-hidden
-              ${compactLevel === 'icons-only' ? 'w-0 opacity-0' : 'opacity-100'}
+              hidden lg:flex items-center flex-shrink-0
+              transition-all duration-500 ease-in-out
+              ${compactLevel === 'icons-only' ? 'gap-1 ml-2' :
+                compactLevel === 'compact'    ? 'gap-2 ml-3' : 'gap-3 ml-6'}
             `}>
-              <p className={`
-                font-medium text-gray-900 whitespace-nowrap transition-all duration-300
-                ${compactLevel === 'medium' ? 'text-xs' : 'text-sm'}
-                hidden xl:block
+              <div className={`
+                text-sm text-right transition-all duration-500 ease-in-out overflow-hidden
+                ${compactLevel === 'icons-only' ? 'w-0 opacity-0' : 'opacity-100'}
               `}>
+                <p className={`
+                  font-medium text-gray-900 whitespace-nowrap transition-all duration-300
+                  ${compactLevel === 'medium' ? 'text-xs' : 'text-sm'}
+                  hidden xl:block
+                `}>
+                  {userName || 'User'}
+                </p>
+                <span className={`
+                  inline-flex items-center px-2 py-0.5 rounded-full font-medium
+                  bg-[#e0f9fc] text-[#0fa8be] whitespace-nowrap
+                  transition-all duration-300
+                  ${compactLevel === 'medium' ? 'text-[10px]' : 'text-xs'}
+                `}>
+                  {role}
+                </span>
+              </div>
+
+              <form action={logoutAction}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="submit"
+                  className={`
+                    group relative overflow-hidden whitespace-nowrap
+                    border-[#a8f0f8] text-[#028697]
+                    hover:bg-red-50 hover:border-red-300 hover:text-red-600
+                    transition-all duration-500 ease-in-out
+                    ${compactLevel === 'icons-only' ? 'px-2' : 'px-3'}
+                    hover:scale-105 hover:shadow-md
+                  `}
+                >
+                  <LogOut className={`
+                    w-4 h-4 transition-all duration-300
+                    ${compactLevel === 'icons-only' ? '' : 'xl:mr-2'}
+                    group-hover:rotate-12
+                  `} />
+                  <span className={`
+                    transition-all duration-500 ease-in-out overflow-hidden inline-block
+                    ${compactLevel === 'icons-only' ? 'w-0 opacity-0' : 'w-0 opacity-0 xl:w-auto xl:opacity-100'}
+                  `}>
+                    Logout
+                  </span>
+                </Button>
+              </form>
+            </div>
+
+            {/* Mobile – compact user chip in top bar (no hamburger) */}
+            <div className="flex lg:hidden items-center gap-2">
+              <span className="text-xs font-medium text-gray-500 max-w-[80px] truncate">
                 {userName || 'User'}
-              </p>
-              <span className={`
-                inline-flex items-center px-2 py-0.5 rounded-full font-medium
-                bg-[#e0f9fc] text-[#0fa8be] whitespace-nowrap
-                transition-all duration-300
-                ${compactLevel === 'medium' ? 'text-[10px]' : 'text-xs'}
-              `}>
+              </span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#e0f9fc] text-[#028697]">
                 {role}
               </span>
             </div>
 
-            <form action={logoutAction}>
-              <Button
-                variant="outline"
-                size="sm"
-                type="submit"
-                className={`
-                  group relative overflow-hidden whitespace-nowrap
-                  border-[#a8f0f8] text-[#028697]
-                  hover:bg-red-50 hover:border-red-300 hover:text-red-600
-                  transition-all duration-500 ease-in-out
-                  ${compactLevel === 'icons-only' ? 'px-2' : 'px-3'}
-                  hover:scale-105 hover:shadow-md
-                `}
-              >
-                <LogOut className={`
-                  w-4 h-4 transition-all duration-300
-                  ${compactLevel === 'icons-only' ? '' : 'xl:mr-2'}
-                  group-hover:rotate-12
-                `} />
-                <span className={`
-                  transition-all duration-500 ease-in-out overflow-hidden inline-block
-                  ${compactLevel === 'icons-only' ? 'w-0 opacity-0' : 'w-0 opacity-0 xl:w-auto xl:opacity-100'}
-                `}>
-                  Logout
-                </span>
-              </Button>
-            </form>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="flex items-center lg:hidden ml-4">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="relative inline-flex items-center justify-center p-2 rounded-md transition-all duration-300 hover:scale-110 text-[#028697] hover:bg-[#e0f9fc]"
-              aria-label="Toggle menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              <span className="sr-only">{mobileMenuOpen ? 'Close menu' : 'Open menu'}</span>
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6 transition-transform duration-300 rotate-90" />
-              ) : (
-                <Menu className="w-6 h-6 transition-transform duration-300" />
-              )}
-            </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile menu */}
-      <div className={`
-        lg:hidden overflow-hidden text-xs
-        transition-all duration-500 ease-in-out
-        ${mobileMenuOpen ? 'max-h-[800px] border-t border-[#a8f0f8] shadow-2xl' : 'max-h-0'}
-      `}>
-        <div className={`
-          bg-white transition-all duration-400
-          ${mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}
-        `}>
-          <div className="px-3 pt-3 pb-3 space-y-1.5">
-            {navItems.map((item, index) => {
+      {/* ── MOBILE BOTTOM NAV BAR ── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="mx-3 mb-3 pointer-events-auto rounded-2xl bg-white/90 backdrop-blur-md border border-[#c8f4f9] shadow-[0_-4px_28px_rgba(2,134,151,0.15)]">
+          <div className="flex items-stretch justify-around px-1 py-1.5">
+
+            {navItems.map((item) => {
               const isActive = isNavItemActive(item);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`
-                    flex items-center gap-3 px-4 py-3 rounded-xl
-                    text-xs font-medium transition-all duration-300 ease-out
-                    ${isActive
-                      ? 'bg-[#028697] text-white shadow-lg scale-102'
-                      : 'text-gray-700 hover:text-[#028697] hover:bg-[#e0f9fc]'
-                    }
-                  `}
-                  style={{ transitionDelay: mobileMenuOpen ? `${index * 30}ms` : '0ms' }}
+                  className="relative flex flex-col items-center justify-center gap-1 flex-1 py-2 px-1 rounded-xl transition-all duration-200 group"
                 >
-                  <span className={`transition-transform duration-300 ${isActive ? 'scale-110' : ''}`}>
-                    {item.icon}
+                  {/* Active pill */}
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-xl bg-[#028697] shadow-md" />
+                  )}
+                  {/* Hover tint */}
+                  {!isActive && (
+                    <span className="absolute inset-0 rounded-xl opacity-0 group-active:opacity-100 group-hover:opacity-100 bg-[#e0f9fc] transition-opacity duration-150" />
+                  )}
+
+                  {/* Icon */}
+                  <span className={`relative z-10 transition-all duration-200 ${
+                    isActive
+                      ? 'text-white scale-110'
+                      : 'text-gray-400 group-hover:text-[#028697] group-active:scale-110'
+                  }`}>
+                    {/* Render bigger icon for mobile */}
+                    {item.href.includes('admin') || item.href.includes('manager') || item.href.includes('member')
+                      ? <span className="[&>svg]:w-5 [&>svg]:h-5">{item.icon}</span>
+                      : item.icon
+                    }
                   </span>
-                  <span className="relative">
-                    {item.label}
-                    {isActive && (
-                      <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white/50 rounded-full" />
-                    )}
+
+                  {/* Label */}
+                  <span className={`relative z-10 text-[9px] font-semibold leading-none tracking-wide transition-colors duration-200 ${
+                    isActive ? 'text-white' : 'text-gray-400 group-hover:text-[#028697]'
+                  }`}>
+                    {item.mobileLabel}
                   </span>
                 </Link>
               );
             })}
-          </div>
 
-          {/* Mobile User Info and Logout */}
-          <div className="pt-4 pb-4 border-t border-[#a8f0f8] bg-gradient-to-b from-[#f0fdfe] to-white">
-            <div
-              className="px-5 mb-3 transition-all duration-300"
-              style={{ transitionDelay: mobileMenuOpen ? `${navItems.length * 30}ms` : '0ms' }}
-            >
-              <div className="text-sm font-bold text-gray-900">{userName || 'User'}</div>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#e0f9fc] text-[#0fa8be] mt-1.5">
-                {role}
-              </span>
-            </div>
-            <div
-              className="px-3 transition-all duration-300"
-              style={{ transitionDelay: mobileMenuOpen ? `${(navItems.length + 1) * 30}ms` : '0ms' }}
-            >
-              <form action={logoutAction}>
-                <Button
-                  variant="outline"
-                  className="w-full border-[#a8f0f8] text-[#028697] hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-all duration-300"
-                  type="submit"
-                >
-                  <LogOut className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-12" />
-                  Logout
-                </Button>
-              </form>
-            </div>
+            {/* Logout tab */}
+            <form action={logoutAction} className="flex-1">
+              <button
+                type="submit"
+                className="relative w-full h-full flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 group"
+              >
+                <span className="absolute inset-0 rounded-xl opacity-0 group-active:opacity-100 group-hover:opacity-100 bg-red-50 transition-opacity duration-150" />
+                <LogOut className="relative z-10 w-5 h-5 text-gray-400 group-hover:text-red-500 group-active:text-red-500 transition-colors duration-200" />
+                <span className="relative z-10 text-[9px] font-semibold leading-none tracking-wide text-gray-400 group-hover:text-red-500 group-active:text-red-500 transition-colors duration-200">
+                  Keluar
+                </span>
+              </button>
+            </form>
+
           </div>
         </div>
       </div>
-    </nav>
+    </>
   );
 }

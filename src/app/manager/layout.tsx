@@ -20,7 +20,7 @@ export default async function ManagerLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation role={session.user.role} userName={session.user.name}/>
-      <main className="container mx-auto p-8">
+      <main className="container mx-auto p-8 pb-28 lg:pb-8">
         {children}
       </main>
     </div>
