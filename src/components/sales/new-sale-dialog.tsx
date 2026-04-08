@@ -177,7 +177,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
     } else {
       setItems([...items, {
         variantId: variant.id,
-        variantName: `${variant.product.name} - ${variant.name}`,
+        variantName: `${variant.name}`,
         quantity,
         price: variant.price,
       }]);
@@ -306,7 +306,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
       <DialogContent
         aria-describedby={undefined}
-        className="w-[95vw] max-w-[95vw] sm:max-w-[680px] max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0"
+        className="w-[95vw] max-w-[95vw] sm:max-w-[680px] min-h-[80vh] max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0"
       >
         {/* ── Header ── */}
         <DialogHeader className="px-5 pt-5 pb-4 border-b bg-white shrink-0">
@@ -487,7 +487,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                   </div>
                   {items.length > 0 && (
                     <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
-                      {items.length} item
+                      {items.length} item · {items.reduce((sum, item) => sum + item.quantity, 0)} pcs
                     </span>
                   )}
                 </div>
@@ -501,7 +501,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                     {/* Column headers */}
-                    <div className="grid grid-cols-[1fr,48px,auto] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                    <div className="grid grid-cols-[1fr,150px,auto] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Produk</span>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Qty</span>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right pr-8">Total</span>
@@ -514,8 +514,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         return (
                           <div key={index} className="grid grid-cols-[1fr,48px,auto] gap-2 items-center px-3 py-2.5 hover:bg-gray-50/70 transition-colors">
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate leading-tight">{item.variantName}</p>
-                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                              <p className="text-sm font-medium text-gray-900 truncate leading-tight">{variant?.name}</p>
+                              <p className="text-xs text-gray-500 truncate leading-tight">{variant?.product.name}</p>
+                              <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 <span className="text-xs text-gray-400">{formatCurrency(item.price)}/pcs</span>
                                 {customerId && pointsToRedeem === 0 && itemPoints > 0 && (
                                   <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
@@ -524,9 +525,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                                 )}
                               </div>
                             </div>
-                            <span className="text-sm font-semibold text-gray-700 text-center tabular-nums">{item.quantity}</span>
+                            <span className="text-xs font-semibold text-gray-700 text-center tabular-nums">{item.quantity}</span>
                             <div className="flex items-center gap-1 justify-end">
-                              <span className="text-sm font-bold text-gray-900 tabular-nums whitespace-nowrap">
+                              <span className="text-xs font-bold text-gray-900 tabular-nums whitespace-nowrap">
                                 {formatCurrency(item.price * item.quantity)}
                               </span>
                               <button

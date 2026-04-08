@@ -52,7 +52,7 @@ function LoginForm() {
             <ShoppingBag className="w-8 h-8 text-white" />
           </div>
           <CardTitle className="text-xl font-bold text-center text-[#028697]">
-            Sales Record
+            Dapur Lisa
           </CardTitle>
           <CardDescription className="text-center text-base">
             Login untuk akses ke beranda

@@ -43,6 +43,10 @@ async function getRecentActivity() {
         customer: {
           select: { name: true },
         },
+        nonMemberCustomer: {
+          select: { name: true},
+        },
+          
       },
     }),
     db.productVariant.findMany({
@@ -67,7 +71,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl md:text-3xl font-bold">Beranda Admin</h1>
         <p className="text-sm md:text-base text-gray-600 mt-1">Selamat datang! Berikut adalah ringkasan toko kamu.</p>
       </div>
@@ -131,12 +135,12 @@ export default async function AdminDashboard() {
                 recentSales.map((sale: typeof recentSales[number]) => (
                   <div key={sale.id} className="flex items-center justify-between">
                     <div className="min-w-0 flex-1 mr-3">
-                      <p className="text-sm font-medium truncate">{sale.saleNumber}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {sale.customer?.name || 'Guest'}
+                      <p className="text-xs font-semibold truncate">
+                        {sale.customer?.name || sale.nonMemberCustomer?.name}
                       </p>
+                      <p className="text-xs text-muted-foreground italic truncate">{sale.saleNumber}</p>
                     </div>
-                    <div className="text-sm font-medium flex-shrink-0">{formatCurrency(Number(sale.total))}</div>
+                    <div className="text-xs font-medium flex-shrink-0">{formatCurrency(Number(sale.total))}</div>
                   </div>
                 ))
               )}

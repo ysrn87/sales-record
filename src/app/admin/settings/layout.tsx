@@ -14,7 +14,7 @@ export default function SettingsLayout({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-3xl font-bold">Pengaturan</h1>
         <p className="text-gray-600">Kelola sistem poin dan profil admin</p>
       </div>

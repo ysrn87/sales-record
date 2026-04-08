@@ -85,8 +85,8 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
                   <TableCell className="font-medium truncate">{sale.saleNumber}</TableCell>
                   <TableCell className='truncate'>{formatDateTime(sale.createdAt)}</TableCell>
                   <TableCell className='truncate'>{sale.customer?.name || sale.nonMemberCustomer?.name || 'Pelanggan-umum'}</TableCell>
-                  <TableCell>{sale.cashier.name}</TableCell>
-                  <TableCell>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} unit</TableCell>
+                  <TableCell className='truncate'>{sale.cashier.name}</TableCell>
+                  <TableCell className='truncate'>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} pc(s)</TableCell>
                   <TableCell>{formatCurrency(sale.total)}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -120,7 +120,7 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
               {/* Header Row */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate">{sale.saleNumber}</p>
+                  <p className="text-xs font-medium text-gray-900 truncate">{sale.saleNumber}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{formatDateTime(sale.createdAt)}</p>
                 </div>
                 <div className="ml-3 flex-shrink-0">
@@ -132,15 +132,14 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
 
               {/* Customer & Cashier */}
               <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 text-xs">Customer:</span>
-                  <span className="font-medium text-gray-900 truncate ml-2 max-w-[180px]">
+                <div className="flex items-center text-sm">
+                  <span className="font-medium text-gray-900 truncate max-w-[180px]">
                     {sale.customer?.name || sale.nonMemberCustomer?.name || 'Pelanggan-umum'}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center text-sm">
                   <span className="text-gray-500 text-xs">Cashier:</span>
-                  <span className="font-medium text-gray-900 truncate ml-2 max-w-[180px]">
+                  <span className="text-xs text-gray-900 truncate ml-2 max-w-[180px]">
                     {sale.cashier.name}
                   </span>
                 </div>
@@ -152,7 +151,7 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
                   <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
                     {sale.paymentMethod}
                   </span>
-                  <span className="text-xs text-gray-500">{totalItems} unit</span>
+                  <span className="text-xs text-gray-500">{totalItems} pcs</span>
                 </div>
                 <div className="text-base font-bold text-[#028697]">
                   {formatCurrency(sale.total)}

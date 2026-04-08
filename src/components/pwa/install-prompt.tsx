@@ -106,7 +106,7 @@ export function PWAInstallPrompt() {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                Instal Sales Record
+                Instal Dapur Lisa
               </h3>
               <p className="text-xs text-gray-600 mb-2">
                 Instal aplikasi di iPhone: tap{' '}
@@ -142,7 +142,7 @@ export function PWAInstallPrompt() {
           
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-gray-900 mb-1">
-              Install Sales Record
+              Install Dapur Lisa
             </h3>
             <p className="text-xs text-gray-600 mb-3">
               Pasang aplikasi untuk memudahkan melihat poin dan riwayat transaksi.

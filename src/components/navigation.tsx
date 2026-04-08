@@ -151,7 +151,7 @@ export function Navigation({ role, userName }: NavigationProps) {
             {/* Left – Logo + Desktop Nav */}
             <div className="flex items-center flex-1 min-w-0 gap-3 sm:gap-4 lg:gap-6">
               <div className="flex-shrink-0">
-                <h1 className="text-lg font-bold text-[#028697] whitespace-nowrap">Sales Record</h1>
+                <h1 className="text-lg font-bold text-[#028697] whitespace-nowrap">Dapur Lisa</h1>
               </div>
 
               {/* Desktop nav links */}
@@ -257,26 +257,24 @@ export function Navigation({ role, userName }: NavigationProps) {
               </form>
             </div>
 
-            {/* Mobile – user info + logout in top bar */}
+            {/* Mobile – user info + logout in top-right */}
             <div className="flex lg:hidden items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-gray-600 max-w-[70px] truncate">
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-semibold text-gray-700 max-w-[90px] truncate leading-tight">
                   {userName || 'User'}
                 </span>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#e0f9fc] text-[#028697]">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#e0f9fc] text-[#028697] leading-tight">
                   {role}
                 </span>
               </div>
               <form action={logoutAction}>
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
                   type="submit"
-                  className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                  className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-50 border border-red-200 text-red-500 hover:bg-red-100 active:bg-red-200 transition-colors duration-150"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
-                </Button>
+                </button>
               </form>
             </div>
 
@@ -328,7 +326,6 @@ export function Navigation({ role, userName }: NavigationProps) {
                 </Link>
               );
             })}
-
           </div>
         </div>
       </div>

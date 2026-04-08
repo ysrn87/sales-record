@@ -14,7 +14,7 @@ export default function SalesCustomersLayout({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-3xl font-bold">Penjualan & Pelanggan</h1>
         <p className="text-gray-600">
           Kelola transaksi penjualan dan data pelanggan

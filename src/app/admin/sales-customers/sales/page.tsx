@@ -35,6 +35,11 @@ async function getSales(params: {
           name: { contains: search, mode: 'insensitive' as const } 
         } 
       },
+      {
+        nonMemberCustomer: {
+          name: { contains: search, mode: 'insensitive' as const }
+        }
+      },
       { 
         saleNumber: { contains: search, mode: 'insensitive' as const } 
       },
@@ -247,7 +252,7 @@ export default async function AdminSalesPage({
         <CardContent className="space-y-4">
           {/* Search & Filter Bar */}
           <SearchFilterBar
-            searchPlaceholder="Search by customer name, sale number, or cashier..."
+            searchPlaceholder="Customer, sale number, or cashier..."
             filters={[
               {
                 key: 'payment',

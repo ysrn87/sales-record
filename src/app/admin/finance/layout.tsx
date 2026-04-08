@@ -14,7 +14,7 @@ export default function FinanceLayout({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-3xl font-bold">Keuangan</h1>
         <p className="text-gray-600">Kelola cashflow dan laporan keuangan</p>
       </div>

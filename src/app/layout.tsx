@@ -6,13 +6,13 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Sales Record',
+  title: 'Dapur Lisa',
   description: 'Product and Sales Recording System',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Sales Record',
+    title: 'Dapur Lisa',
   },
   formatDetection: {
     telephone: false,
