@@ -28,9 +28,10 @@ export default function SalesCustomersLayout({
         }
         className="space-y-6"
       >
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="sales">Penjualan</TabsTrigger>
           <TabsTrigger value="customers">Customer</TabsTrigger>
+          <TabsTrigger value="recap">Rekap</TabsTrigger>
         </TabsList>
 
         <div>{children}</div>

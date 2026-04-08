@@ -10,7 +10,11 @@ export default function ManagerSalesCustomersLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const currentTab = pathname.includes('/sales') ? 'sales' : 'customers';
+  const currentTab = pathname.includes('/recap')
+    ? 'recap'
+    : pathname.includes('/customers')
+    ? 'customers'
+    : 'sales';
 
   return (
     <div className="space-y-6">
@@ -20,12 +24,15 @@ export default function ManagerSalesCustomersLayout({
       </div>
 
       <Tabs value={currentTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="sales" asChild>
             <Link href="/manager/sales-customers/sales">Penjualan</Link>
           </TabsTrigger>
           <TabsTrigger value="customers" asChild>
-            <Link href="/manager/sales-customers/customers">Member</Link>
+            <Link href="/manager/sales-customers/customers">Customer</Link>
+          </TabsTrigger>
+          <TabsTrigger value="recap" asChild>
+            <Link href="/manager/sales-customers/recap">Rekap</Link>
           </TabsTrigger>
         </TabsList>
 
