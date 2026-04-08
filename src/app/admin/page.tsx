@@ -106,14 +106,14 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs md:text-sm font-medium">Pendapatan</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl md:text-2xl font-bold">{formatCurrency(Number(stats.totalRevenue))}</div>
-            <p className="text-[10px] md:text-xs text-muted-foreground">Total pendapatan penjualan</p>
+            <div className="text-base md:text-2xl font-bold break-all leading-tight">{formatCurrency(Number(stats.totalRevenue))}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground mt-1">Total pendapatan penjualan</p>
           </CardContent>
         </Card>
       </div>

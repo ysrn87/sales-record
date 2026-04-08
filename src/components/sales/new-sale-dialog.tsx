@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { createSaleAction } from '@/actions/sales';
-import { Plus, Trash2, Gift, X, User, Search, ChevronDown, UserPlus } from 'lucide-react';
+import { Plus, Trash2, Gift, X, User, Search, ChevronDown, UserPlus, ShoppingCart, CreditCard, Package, FileText, Minus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { QuickAddCustomerForm } from '@/components/customers/quick-add-customer-form';
 
@@ -54,7 +54,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   const [quantity, setQuantity] = useState<number>(1);
   const [customerId, setCustomerId] = useState<string>('');
   const [nonMemberCustomerId, setNonMemberCustomerId] = useState<string>('');
-  const [customerType, setCustomerType] = useState<'member' | 'non-member' | ''>(''); // Track customer type
+  const [customerType, setCustomerType] = useState<'member' | 'non-member' | ''>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('CASH');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(PaymentStatus.PAID);
   const [discount, setDiscount] = useState<number>(0);
@@ -65,11 +65,15 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   const [showQuickAddForm, setShowQuickAddForm] = useState(false);
   const [localNonMemberCustomers, setLocalNonMemberCustomers] = useState(nonMemberCustomers);
 
-  // Improved UI states
   const [customerSearch, setCustomerSearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
+
+  const [quantityDisplay, setQuantityDisplay] = useState('1');
+  const [discountDisplay, setDiscountDisplay] = useState('');
+  const [taxDisplay, setTaxDisplay] = useState('');
+  const [ongkirDisplay, setOngkirDisplay] = useState('');
 
   const { toast } = useToast();
 
@@ -81,23 +85,20 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const total = subtotal - discount - pointDiscount + tax + ongkir;
 
-  // Points are only earned for members who are not redeeming points
   const pointsEarned = (customerId && customerType === 'member' && pointsToRedeem === 0)
     ? items.reduce((sum, item) => {
-      const variant = variants.find(v => v.id === item.variantId);
-      return sum + (variant?.points ?? 0) * item.quantity;
-    }, 0)
+        const variant = variants.find(v => v.id === item.variantId);
+        return sum + (variant?.points ?? 0) * item.quantity;
+      }, 0)
     : 0;
 
   const handleCustomerChange = (value: string) => {
-    // Reset both customer IDs first
     setCustomerId('');
     setNonMemberCustomerId('');
     setPointsToRedeem(0);
     setIsCustomerDropdownOpen(false);
     setCustomerSearch('');
 
-    // Check if it's a member or non-member
     const isMember = customers.some(c => c.id === value);
     const isNonMember = localNonMemberCustomers.some(c => c.id === value);
 
@@ -113,35 +114,21 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   };
 
   const handleQuickAddSuccess = (customer: { id: string; name: string; phone: string; address: string }) => {
-    // Add to local list
     setLocalNonMemberCustomers(prev => [customer, ...prev]);
-    // Select the new customer
     setNonMemberCustomerId(customer.id);
     setCustomerType('non-member');
     setShowQuickAddForm(false);
     setIsCustomerDropdownOpen(false);
-    toast({
-      title: 'Success!',
-      description: 'Customer added and selected.',
-    });
+    toast({ title: 'Berhasil!', description: 'Pelanggan ditambahkan dan dipilih.' });
   };
 
   const handleDiscountChange = (value: number) => {
     const totalDiscount = value + pointDiscount;
-
     if (value > subtotal) {
-      toast({
-        title: 'Invalid Discount',
-        description: 'Discount cannot exceed subtotal amount.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Diskon Tidak Valid', description: 'Diskon tidak boleh melebihi subtotal.', variant: 'destructive' });
       setDiscount(subtotal - pointDiscount);
     } else if (totalDiscount > subtotal) {
-      toast({
-        title: 'Total Discount Too High',
-        description: `Combined discount and point discount (${formatCurrency(totalDiscount)}) cannot exceed subtotal (${formatCurrency(subtotal)}).`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Total Diskon Terlalu Tinggi', description: `Kombinasi diskon dan poin (${formatCurrency(totalDiscount)}) melebihi subtotal (${formatCurrency(subtotal)}).`, variant: 'destructive' });
       setDiscount(Math.max(0, subtotal - pointDiscount));
     } else {
       setDiscount(value);
@@ -151,25 +138,14 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   const handlePointsRedeemChange = (value: number) => {
     const newPointDiscount = value * conversionRate;
     const totalDiscount = discount + newPointDiscount;
-
     if (value > availablePoints) {
-      toast({
-        title: 'Insufficient Points',
-        description: `Customer only has ${availablePoints} points available.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Poin Tidak Cukup', description: `Pelanggan hanya memiliki ${availablePoints} poin.`, variant: 'destructive' });
       setPointsToRedeem(availablePoints);
     } else if (value < 0) {
       setPointsToRedeem(0);
     } else if (totalDiscount > subtotal) {
-      const maxPointDiscount = subtotal - discount;
-      const maxPoints = Math.floor(maxPointDiscount / conversionRate);
-
-      toast({
-        title: 'Total Discount Too High',
-        description: `Combined discount and point discount cannot exceed subtotal. Maximum ${maxPoints} points can be redeemed.`,
-        variant: 'destructive',
-      });
+      const maxPoints = Math.floor((subtotal - discount) / conversionRate);
+      toast({ title: 'Total Diskon Terlalu Tinggi', description: `Maksimal ${maxPoints} poin dapat ditukar.`, variant: 'destructive' });
       setPointsToRedeem(Math.max(0, maxPoints));
     } else {
       setPointsToRedeem(value);
@@ -184,28 +160,16 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
   const addItem = () => {
     if (!selectedVariantId || quantity <= 0) {
-      toast({
-        title: 'Error',
-        description: 'Please select a product and enter quantity.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Pilih produk dan masukkan jumlah.', variant: 'destructive' });
       return;
     }
-
     const variant = variants.find(v => v.id === selectedVariantId);
     if (!variant) return;
-
     if (quantity > variant.stock) {
-      toast({
-        title: 'Error',
-        description: `Only ${variant.stock} units available in stock.`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: `Stok tersedia hanya ${variant.stock} unit.`, variant: 'destructive' });
       return;
     }
-
     const existingItemIndex = items.findIndex(item => item.variantId === selectedVariantId);
-
     if (existingItemIndex >= 0) {
       const newItems = [...items];
       newItems[existingItemIndex].quantity += quantity;
@@ -218,9 +182,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
         price: variant.price,
       }]);
     }
-
     setSelectedVariantId('');
     setQuantity(1);
+    setQuantityDisplay('1');
   };
 
   const removeItem = (index: number) => {
@@ -229,78 +193,39 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
   const handleSubmit = async () => {
     if (!customerId && !nonMemberCustomerId) {
-      toast({
-        title: 'Error',
-        description: 'Please select a customer.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Pilih pelanggan terlebih dahulu.', variant: 'destructive' });
       return;
     }
-
     if (items.length === 0) {
-      toast({
-        title: 'Error',
-        description: 'Please add at least one item to the sale.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Tambahkan minimal satu produk.', variant: 'destructive' });
       return;
     }
-
     if (discount > subtotal) {
-      toast({
-        title: 'Error',
-        description: 'Discount cannot exceed subtotal amount.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Diskon tidak boleh melebihi subtotal.', variant: 'destructive' });
       return;
     }
-
-    // Points redemption only for members
     if (pointsToRedeem > 0 && !customerId) {
-      toast({
-        title: 'Error',
-        description: 'Points redemption is only available for members.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Penukaran poin hanya untuk member.', variant: 'destructive' });
       return;
     }
-
     if (pointsToRedeem > availablePoints) {
-      toast({
-        title: 'Error',
-        description: 'Points to redeem exceed available points.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Poin yang ditukar melebihi poin tersedia.', variant: 'destructive' });
       return;
     }
-
     const totalDiscount = discount + pointDiscount;
     if (totalDiscount > subtotal) {
-      toast({
-        title: 'Error',
-        description: `Total discount (${formatCurrency(totalDiscount)}) cannot exceed subtotal (${formatCurrency(subtotal)}).`,
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: `Total diskon (${formatCurrency(totalDiscount)}) melebihi subtotal (${formatCurrency(subtotal)}).`, variant: 'destructive' });
       return;
     }
-
     if (total < 0) {
-      toast({
-        title: 'Error',
-        description: 'Total payment cannot be negative. Please adjust discounts.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error', description: 'Total tidak boleh negatif. Kurangi diskon.', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
     try {
       const result = await createSaleAction({
-        items: items.map(item => ({
-          variantId: item.variantId,
-          quantity: item.quantity,
-          price: item.price,
-        })),
+        items: items.map(item => ({ variantId: item.variantId, quantity: item.quantity, price: item.price })),
         customerId: customerId || null,
         nonMemberCustomerId: nonMemberCustomerId || null,
         paymentMethod,
@@ -313,10 +238,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
       });
 
       if (result.success) {
-        toast({
-          title: 'Success!',
-          description: `Sale completed. Total: ${formatCurrency(total)}`,
-        });
+        toast({ title: 'Transaksi Berhasil! 🎉', description: `Total: ${formatCurrency(total)}` });
         setItems([]);
         setCustomerId('');
         setNonMemberCustomerId('');
@@ -324,52 +246,47 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
         setDiscount(0);
         setTax(0);
         setOngkir(0);
+        setPaymentMethod('CASH');
         setPaymentStatus('PAID');
         setPointsToRedeem(0);
         setNotes('');
+        setSelectedVariantId('');
+        setQuantity(1);
+        setQuantityDisplay('1');
+        setDiscountDisplay('');
+        setTaxDisplay('');
+        setOngkirDisplay('');
+        setProductSearch('');
+        setCustomerSearch('');
+        setShowQuickAddForm(false);
+        setIsProductDropdownOpen(false);
+        setIsCustomerDropdownOpen(false);
         setOpen(false);
       } else {
-        toast({
-          title: 'Error',
-          description: result.error || 'Failed to create sale.',
-          variant: 'destructive',
-        });
+        toast({ title: 'Error', description: result.error || 'Gagal membuat transaksi.', variant: 'destructive' });
       }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Error', description: 'Terjadi kesalahan yang tidak terduga.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  // Get customer display name
   const getCustomerDisplayName = () => {
-    if (customerType === 'member' && selectedCustomer) {
-      return selectedCustomer.name;
-    }
-    if (customerType === 'non-member' && selectedNonMemberCustomer) {
-      return selectedNonMemberCustomer.name;
-    }
+    if (customerType === 'member' && selectedCustomer) return selectedCustomer.name;
+    if (customerType === 'non-member' && selectedNonMemberCustomer) return selectedNonMemberCustomer.name;
     return null;
   };
 
-  // Get selected variant
   const selectedVariant = variants.find(v => v.id === selectedVariantId);
+  const customerSelected = !!(customerId || nonMemberCustomerId);
 
-  // Filter customers - combine members and non-members
   const filteredMembers = customers.filter(c =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
-
   const filteredNonMembers = localNonMemberCustomers.filter(c =>
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
-
-  // Filter variants
   const filteredVariants = variants
     .filter(v => v.stock > 0)
     .filter(v =>
@@ -378,51 +295,44 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
       v.name.toLowerCase().includes(productSearch.toLowerCase())
     );
 
-  const [quantityDisplay, setQuantityDisplay] = useState('1');
-  const [discountDisplay, setDiscountDisplay] = useState('');
-  const [taxDisplay, setTaxDisplay] = useState('');
-  const [ongkirDisplay, setOngkirDisplay] = useState('');
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button className="gap-2">
+          <Plus className="w-4 h-4" />
           Penjualan Baru
         </Button>
       </DialogTrigger>
-      <DialogContent aria-describedby={undefined} className="w-[95vw] max-w-[95vw] sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Penjualan Baru</DialogTitle>
+
+      <DialogContent
+        aria-describedby={undefined}
+        className="w-[95vw] max-w-[95vw] sm:max-w-[680px] max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0"
+      >
+        {/* ── Header ── */}
+        <DialogHeader className="px-5 pt-5 pb-4 border-b bg-white shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-semibold text-gray-900">Penjualan Baru</DialogTitle>
+              <p className="text-xs text-gray-400 mt-0.5">Isi detail transaksi di bawah ini</p>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          {/* Customer Selection - Improved Combobox Style */}
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium">
-              Customer <span className="text-red-500">*</span>
-            </Label>
+        {/* ── Scrollable Body ── */}
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
 
+          {/* ─── 1. PELANGGAN ─── */}
+          <section className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-gray-400" />
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Pelanggan</span>
+            </div>
 
-            {/* Quick Add Customer Button */}
-            {!showQuickAddForm && (
-              <div className="p-2 border-b flex-shrink-0">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowQuickAddForm(true)}
-                  className="w-full gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Tambah Pelanggan Baru
-                </Button>
-              </div>
-            )}
-
-            {/* Quick Add Form */}
             {showQuickAddForm && (
-              <div className="p-2 border-b flex-shrink-0">
+              <div className="p-3 border border-blue-100 rounded-xl bg-blue-50/60">
                 <QuickAddCustomerForm
                   onSuccess={handleQuickAddSuccess}
                   onCancel={() => setShowQuickAddForm(false)}
@@ -431,26 +341,28 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
             )}
 
             <div className="relative">
-              {/* Combobox Button */}
               <button
                 type="button"
                 onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
-                className={`flex items-center gap-2 w-full min-h-[44px] px-3 py-2 border rounded-md text-left transition-colors ${!customerId && !nonMemberCustomerId ? 'text-gray-400 hover:bg-gray-50' : 'hover:bg-gray-50'
-                  } ${!customerId && !nonMemberCustomerId ? 'border-gray-300' : 'border-blue-300 bg-blue-50'}`}
+                className={`flex items-center gap-2 w-full min-h-[46px] px-3 py-2 border rounded-xl text-left transition-all text-sm ${
+                  customerSelected
+                    ? 'border-blue-300 bg-blue-50 hover:bg-blue-100/60'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
               >
-                {(customerId || nonMemberCustomerId) ? (
-                  // Selected state - show as chip
-                  <div className="flex items-center gap-2 bg-blue-100 text-blue-900 px-2 py-1 rounded-md min-w-0 break-words line-clamp-2">
-                    <User className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-sm font-medium break-words line-clamp-2">{getCustomerDisplayName()}</span>
-                    {selectedCustomer && customerType === 'member' && (
-                      <span className="text-xs text-blue-600 whitespace-nowrap">• {selectedCustomer.points} poin</span>
-                    )}
-                    {customerType === 'non-member' && (
-                      <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded whitespace-nowrap">Non-Member</span>
-                    )}
+                {customerSelected ? (
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white text-xs font-bold">
+                      {getCustomerDisplayName()?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-gray-900 truncate">{getCustomerDisplayName()}</p>
+                      <p className="text-xs text-blue-500">
+                        {customerType === 'member' ? `Member · ${selectedCustomer?.points ?? 0} poin` : 'Non-Member'}
+                      </p>
+                    </div>
                     <X
-                      className="w-4 h-4 ml-1 cursor-pointer hover:text-blue-700 flex-shrink-0"
+                      className="w-4 h-4 text-gray-400 hover:text-red-500 shrink-0 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         setCustomerId('');
@@ -461,50 +373,60 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     />
                   </div>
                 ) : (
-                  // Empty state - show placeholder
-                  <span className="text-sm">Pilih pelanggan...</span>
+                  <>
+                    <Search className="w-4 h-4 text-gray-300 shrink-0" />
+                    <span className="text-gray-400 flex-1 text-sm">Cari atau pilih pelanggan...</span>
+                    <ChevronDown className="w-4 h-4 text-gray-300 shrink-0" />
+                  </>
                 )}
-                <ChevronDown className="w-4 h-4 ml-auto text-gray-400 flex-shrink-0" />
               </button>
-                
-              {/* Dropdown */}
+
               {isCustomerDropdownOpen && (
-                <div className="absolute z-50 w-full mt-1 border rounded-md bg-white shadow-lg max-h-[400px] overflow-hidden flex flex-col">
-                  {/* Search input */}
-                  <div className="p-2 border-b flex-shrink-0">
+                <div className="absolute z-50 w-full mt-1.5 border border-gray-200 rounded-xl bg-white shadow-2xl max-h-[360px] overflow-hidden flex flex-col">
+                  <div className="p-2.5 border-b space-y-2 shrink-0">
                     <div className="relative">
-                      <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
-                        placeholder="Search customers..."
+                        placeholder="Cari nama pelanggan..."
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
-                        className="pl-8 h-9"
+                        className="pl-8 h-9 text-sm border-gray-200 rounded-lg"
                         autoFocus
                       />
                     </div>
+                    {!showQuickAddForm && (
+                      <button
+                        type="button"
+                        onClick={() => { setShowQuickAddForm(true); setIsCustomerDropdownOpen(false); }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        + Tambah Pelanggan Baru
+                      </button>
+                    )}
                   </div>
 
-                  {/* Options list */}
                   <div className="overflow-y-auto flex-1">
-                    {/* Members Section */}
                     {filteredMembers.length > 0 && (
                       <>
-                        <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 sticky top-0">
-                          MEMBERS ({filteredMembers.length})
+                        <div className="px-3 py-1.5 bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest sticky top-0 border-b">
+                          Members ({filteredMembers.length})
                         </div>
                         {filteredMembers.map((customer) => (
                           <div
                             key={customer.id}
                             onClick={() => handleCustomerChange(customer.id)}
-                            className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${customerId === customer.id ? 'bg-blue-50' : ''
-                              }`}
+                            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${customerId === customer.id ? 'bg-blue-50' : ''}`}
                           >
-                            <div className="flex flex-col min-w-0 flex-1 mr-2">
-                              <span className="font-medium text-sm truncate">{customer.name}</span>
-                              <span className="text-xs text-gray-500">{customer.points} points</span>
+                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-700 text-xs font-bold">
+                              {customer.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{customer.name}</p>
+                              <p className="text-xs text-gray-400">{customer.points} poin</p>
                             </div>
                             {customerId === customer.id && (
-                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -515,28 +437,26 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                       </>
                     )}
 
-                    {/* Non-Members Section */}
                     {filteredNonMembers.length > 0 && (
                       <>
-                        <div className="px-3 py-2 bg-gray-50 text-xs font-semibold text-gray-600 sticky top-0">
-                          NON-MEMBERS ({filteredNonMembers.length})
+                        <div className="px-3 py-1.5 bg-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest sticky top-0 border-b">
+                          Non-Members ({filteredNonMembers.length})
                         </div>
                         {filteredNonMembers.map((customer) => (
                           <div
                             key={customer.id}
                             onClick={() => handleCustomerChange(customer.id)}
-                            className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b ${nonMemberCustomerId === customer.id ? 'bg-blue-50' : ''
-                              }`}
+                            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${nonMemberCustomerId === customer.id ? 'bg-blue-50' : ''}`}
                           >
-                            <div className="flex flex-col min-w-0 flex-1 mr-2">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm truncate">{customer.name}</span>
-                                <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded flex-shrink-0">Non-Member</span>
-                              </div>
-                              <span className="text-xs text-gray-500">{customer.phone}</span>
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-gray-600 text-xs font-bold">
+                              {customer.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{customer.name}</p>
+                              <p className="text-xs text-gray-400">{customer.phone}</p>
                             </div>
                             {nonMemberCustomerId === customer.id && (
-                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -547,407 +467,481 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                       </>
                     )}
 
-                    {/* No results */}
-                    {customerSearch &&
-                      filteredMembers.length === 0 &&
-                      filteredNonMembers.length === 0 && (
-                        <div className="p-4 text-center text-sm text-gray-500">
-                          No customers found
-                        </div>
-                      )}
+                    {customerSearch && filteredMembers.length === 0 && filteredNonMembers.length === 0 && (
+                      <div className="p-6 text-center text-sm text-gray-400">Pelanggan tidak ditemukan</div>
+                    )}
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          {/* Product Selection - Only show if customer is selected */}
-          {(customerId || nonMemberCustomerId) && (
+          {customerSelected && (
             <>
-              <div className="grid gap-2">
-                <Label className="text-sm font-medium">Tambah Produk</Label>
-
-                {/* Selected product chip - show above input */}
-                {selectedVariant && (
-                  <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-blue-900 break-words line-clamp-2">
-                        {selectedVariant.product.name} - {selectedVariant.name}
-                      </p>
-                      <p className="text-xs text-blue-600">
-                        {formatCurrency(selectedVariant.price)} • Stock: {selectedVariant.stock}
-                      </p>
-                    </div>
-                    <X
-                      className="w-4 h-4 cursor-pointer text-blue-600 hover:text-blue-700 flex-shrink-0"
-                      onClick={() => setSelectedVariantId('')}
-                    />
+              {/* ─── 2. KERANJANG ─── */}
+              <section className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingCart className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Keranjang</span>
                   </div>
-                )}
-
-                {/* Search input */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    placeholder="Search products..."
-                    value={productSearch}
-                    onChange={(e) => {
-                      setProductSearch(e.target.value);
-                      setIsProductDropdownOpen(true);
-                    }}
-                    onFocus={() => setIsProductDropdownOpen(true)}
-                    className="pl-9"
-                  />
+                  {items.length > 0 && (
+                    <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                      {items.length} item
+                    </span>
+                  )}
                 </div>
 
-                {/* Dropdown - only when searching */}
-                {isProductDropdownOpen && productSearch && (
-                  <div className="border rounded-md bg-white shadow-lg max-h-[200px] overflow-y-auto">
-                    {filteredVariants.map((variant) => (
-                      <div
-                        key={variant.id}
-                        onClick={() => handleProductSelect(variant.id)}
-                        className={`p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${selectedVariantId === variant.id ? 'bg-blue-50' : ''
-                          }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm break-words line-clamp-2">
-                              {variant.product.name} - {variant.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {formatCurrency(variant.price)} • Stock: {variant.stock}
-                            </p>
-                          </div>
-                          {selectedVariantId === variant.id && (
-                            <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
+                {items.length === 0 ? (
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl py-7 flex flex-col items-center gap-1.5 bg-gray-50/40">
+                    <ShoppingCart className="w-6 h-6 text-gray-300" />
+                    <p className="text-sm font-medium text-gray-400">Keranjang masih kosong</p>
+                    <p className="text-xs text-gray-300">Tambahkan produk di bawah ini</p>
+                  </div>
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                    {/* Column headers */}
+                    <div className="grid grid-cols-[1fr,48px,auto] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Produk</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Qty</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right pr-8">Total</span>
+                    </div>
+
+                    <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto">
+                      {items.map((item, index) => {
+                        const variant = variants.find(v => v.id === item.variantId);
+                        const itemPoints = (variant?.points ?? 0) * item.quantity;
+                        return (
+                          <div key={index} className="grid grid-cols-[1fr,48px,auto] gap-2 items-center px-3 py-2.5 hover:bg-gray-50/70 transition-colors">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate leading-tight">{item.variantName}</p>
+                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                <span className="text-xs text-gray-400">{formatCurrency(item.price)}/pcs</span>
+                                {customerId && pointsToRedeem === 0 && itemPoints > 0 && (
+                                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                                    +{itemPoints} poin
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {filteredVariants.length === 0 && (
-                      <div className="p-4 text-center text-sm text-gray-500">
-                        No products found
-                      </div>
-                    )}
+                            <span className="text-sm font-semibold text-gray-700 text-center tabular-nums">{item.quantity}</span>
+                            <div className="flex items-center gap-1 justify-end">
+                              <span className="text-sm font-bold text-gray-900 tabular-nums whitespace-nowrap">
+                                {formatCurrency(item.price * item.quantity)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeItem(index)}
+                                className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors ml-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
+              </section>
 
-                {/* Quantity and Add button */}
-                <div className="grid grid-cols-[1fr,auto] gap-2">
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    value={quantityDisplay}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '');
-                      const num = parseInt(raw) || 0;
-                      setQuantityDisplay(raw ? num.toLocaleString('en-US') : '');
-                      setQuantity(num);
-                    }}
-                    placeholder='0'
-                  />
-                  <Button
-                    type="button"
-                    onClick={addItem}
-                    disabled={!selectedVariantId || quantity <= 0}
-                    className="bg-blue-600 hover:bg-blue-700 whitespace-nowrap"
-                  >
-                    <Plus className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Tambah</span>
-                  </Button>
+              {/* ─── 3. TAMBAH PRODUK ─── */}
+              <section className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Tambah Produk</span>
                 </div>
-              </div>
 
-              {/* Items List - FIXED FOR MOBILE */}
-              {items.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Keranjang ({items.length})</Label>
-                  <div className="border rounded-lg divide-y max-h-[250px] overflow-y-auto overflow-x-hidden">
-                    {items.map((item, index) => (
-                      <div key={index} className="flex items-start gap-2 p-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm break-words line-clamp-2">{item.variantName}</p>
-                          <p className="text-xs text-gray-600 mt-0.5">
-                            {item.quantity} × {formatCurrency(item.price)}
-                          </p>
-                          {customerId && customerId !== 'WALK_IN' && pointsToRedeem === 0 && (() => {
-                            const variant = variants.find(v => v.id === item.variantId);
-                            const itemPoints = (variant?.points ?? 0) * item.quantity;
-                            return itemPoints > 0 ? (
-                              <p className="text-xs text-green-600 mt-0.5">🎁 +{itemPoints} poin</p>
-                            ) : null;
-                          })()}
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="font-semibold text-sm whitespace-nowrap">
-                            {formatCurrency(item.price * item.quantity)}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                            className="h-8 w-8 p-0 flex-shrink-0"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </Button>
-                        </div>
+                <div className="border border-gray-200 rounded-xl p-3 bg-gray-50/40 space-y-2.5">
+                  {/* Selected product preview */}
+                  {selectedVariant && (
+                    <div className="flex items-center gap-2.5 p-2.5 bg-white border border-blue-200 rounded-lg shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                        <Package className="w-4 h-4 text-blue-500" />
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Payment Method */}
-              <div className="grid gap-2">
-                <Label htmlFor="paymentMethod" className="text-sm">Payment Method</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CASH">Cash</SelectItem>
-                    <SelectItem value="CARD">Card</SelectItem>
-                    <SelectItem value="TRANSFER">Bank Transfer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Payment Status */}
-              <div className="grid gap-2">
-                <Label htmlFor="paymentStatus" className="text-sm">Status Pembayaran</Label>
-                <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PAID">Lunas</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="UNPAID">Belum Lunas</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Discount, Tax & Ongkir */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="discount" className="text-sm">
-                    Discount {subtotal > 0 && <span className="text-xs text-gray-500">(Max: {formatCurrency(subtotal)})</span>}
-                  </Label>
-                  <Input
-                    id="discount"
-                    type="text"
-                    inputMode="numeric"
-                    value={discountDisplay}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '');
-                      const num = parseInt(raw) || 0;
-                      setDiscountDisplay(raw ? num.toLocaleString('en-US') : '');
-                      handleDiscountChange(num);
-                    }}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="tax" className="text-sm">Tax</Label>
-                  <Input
-                    id="tax"
-                    type="text"
-                    inputMode="numeric"
-                    value={taxDisplay}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '');
-                      const num = parseInt(raw) || 0;
-                      setTaxDisplay(raw ? num.toLocaleString('en-US') : '');
-                      setTax(num);
-                    }}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div className="grid gap-2 col-span-2">
-                  <Label htmlFor="ongkir" className="text-sm">Ongkir (Biaya Pengiriman)</Label>
-                  <Input
-                    id="ongkir"
-                    type="text"
-                    inputMode="numeric"
-                    value={ongkirDisplay}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '');
-                      const num = parseInt(raw) || 0;
-                      setOngkirDisplay(raw ? num.toLocaleString('en-US') : '');
-                      setOngkir(num);
-                    }}
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div className="grid gap-2">
-                <Label htmlFor="notes" className="text-sm">Notes (Opsional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add notes for this sale..."
-                  rows={2}
-                  maxLength={50}
-                  className="text-sm resize-none"
-                />
-                <p className="text-xs text-gray-500 text-right">
-                  {notes.length}/50 characters
-                </p>
-              </div>
-
-              {/* Point Redemption - Only for members */}
-              {customerType === 'member' && customerId && (
-                <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
-                  <div className="flex items-center gap-2">
-                    <Gift className="w-5 h-5 text-purple-600" />
-                    <h3 className="font-semibold text-base text-purple-900">Redeem Points</h3>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-purple-700">Poin Tersedia:</span>
-                      <span className="font-semibold text-purple-900">{availablePoints} poin</span>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="pointsRedeem" className="text-sm text-purple-900">
-                        Points to Redeem (Max: {availablePoints})
-                      </Label>
-                      <Input
-                        id="pointsRedeem"
-                        type="number"
-                        min="0"
-                        max={availablePoints}
-                        value={pointsToRedeem}
-                        onChange={(e) => handlePointsRedeemChange(parseInt(e.target.value) || 0)}
-                        placeholder="0"
-                        className="bg-white"
-                      />
-                      <p className="text-xs text-purple-600">
-                        1 poin = {formatCurrency(conversionRate)} discount • {pointsToRedeem} poin = {formatCurrency(pointDiscount)}
-                      </p>
-                    </div>
-
-                    {pointsToRedeem > 0 && (
-                      <div className="p-3 bg-white rounded border border-purple-200">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-purple-700">Point Discount:</span>
-                          <span className="text-lg font-bold text-purple-900">-{formatCurrency(pointDiscount)}</span>
-                        </div>
-                        <p className="text-xs text-orange-600 mt-1">
-                          ⚠️ Member tidak mendapatkan poin saat menukarkan poin
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {selectedVariant.product.name} — {selectedVariant.name}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {formatCurrency(selectedVariant.price)} · Stok: {selectedVariant.stock}
                         </p>
                       </div>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedVariantId('')}
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Search input */}
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Cari nama produk..."
+                      value={productSearch}
+                      onChange={(e) => {
+                        setProductSearch(e.target.value);
+                        setIsProductDropdownOpen(true);
+                      }}
+                      onFocus={() => setIsProductDropdownOpen(true)}
+                      className="pl-8 h-9 text-sm border-gray-200 rounded-lg bg-white"
+                    />
+                  </div>
+
+                  {/* Product dropdown */}
+                  {isProductDropdownOpen && productSearch && (
+                    <div className="border border-gray-200 rounded-lg bg-white shadow-md max-h-[180px] overflow-y-auto">
+                      {filteredVariants.length === 0 ? (
+                        <div className="p-4 text-center text-sm text-gray-400">Produk tidak ditemukan</div>
+                      ) : (
+                        filteredVariants.map((variant) => (
+                          <div
+                            key={variant.id}
+                            onClick={() => handleProductSelect(variant.id)}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${selectedVariantId === variant.id ? 'bg-blue-50' : ''}`}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {variant.product.name} — {variant.name}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {formatCurrency(variant.price)} · Stok: {variant.stock}
+                              </p>
+                            </div>
+                            {selectedVariantId === variant.id && (
+                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {/* Qty stepper + Add button */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = Math.max(1, quantity - 1);
+                          setQuantity(next);
+                          setQuantityDisplay(String(next));
+                        }}
+                        className="w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={quantityDisplay}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, '');
+                          const num = parseInt(raw) || 0;
+                          setQuantityDisplay(raw ? String(num) : '');
+                          setQuantity(num);
+                        }}
+                        className="w-12 h-9 text-center text-sm font-bold text-gray-900 border-x border-gray-200 focus:outline-none bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = quantity + 1;
+                          setQuantity(next);
+                          setQuantityDisplay(String(next));
+                        }}
+                        className="w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <Button
+                      type="button"
+                      onClick={addItem}
+                      disabled={!selectedVariantId || quantity <= 0}
+                      className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg text-sm font-semibold gap-1.5 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Tambah
+                    </Button>
                   </div>
                 </div>
+              </section>
+
+              {/* ─── 4. PEMBAYARAN ─── */}
+              <section className="space-y-2.5">
+                <div className="flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Pembayaran</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-gray-500 font-medium">Metode</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CASH">💵 Cash</SelectItem>
+                        <SelectItem value="CARD">💳 Kartu</SelectItem>
+                        <SelectItem value="TRANSFER">🏦 Transfer Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-gray-500 font-medium">Status</Label>
+                    <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
+                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PAID">✅ Lunas</SelectItem>
+                        <SelectItem value="PENDING">⏳ Pending</SelectItem>
+                        <SelectItem value="UNPAID">❌ Belum Lunas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-gray-500 font-medium">Diskon</Label>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={discountDisplay}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const num = parseInt(raw) || 0;
+                        setDiscountDisplay(raw ? num.toLocaleString('en-US') : '');
+                        handleDiscountChange(num);
+                      }}
+                      placeholder="0"
+                      className="h-9 text-sm border-gray-200 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-gray-500 font-medium">Pajak</Label>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={taxDisplay}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const num = parseInt(raw) || 0;
+                        setTaxDisplay(raw ? num.toLocaleString('en-US') : '');
+                        setTax(num);
+                      }}
+                      placeholder="0"
+                      className="h-9 text-sm border-gray-200 rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-gray-500 font-medium">Ongkir</Label>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      value={ongkirDisplay}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const num = parseInt(raw) || 0;
+                        setOngkirDisplay(raw ? num.toLocaleString('en-US') : '');
+                        setOngkir(num);
+                      }}
+                      placeholder="0"
+                      className="h-9 text-sm border-gray-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* ─── 5. CATATAN ─── */}
+              <section className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Catatan</span>
+                  </div>
+                  <span className="text-[10px] text-gray-300 font-medium">{notes.length}/50</span>
+                </div>
+                <Textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Tambahkan catatan opsional..."
+                  rows={2}
+                  maxLength={50}
+                  className="text-sm resize-none border-gray-200 rounded-xl"
+                />
+              </section>
+
+              {/* ─── 6. TUKAR POIN (member only) ─── */}
+              {customerType === 'member' && customerId && (
+                <section className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50/60 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-violet-600 flex items-center justify-center shrink-0">
+                        <Gift className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-violet-900">Tukar Poin</p>
+                        <p className="text-xs text-violet-400">1 poin = {formatCurrency(conversionRate)}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-violet-400 uppercase font-bold tracking-wider">Tersedia</p>
+                      <p className="text-base font-bold text-violet-900">{availablePoints} <span className="text-xs font-medium">poin</span></p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-violet-600 font-semibold">Jumlah Poin (Maks: {availablePoints})</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max={availablePoints}
+                      value={pointsToRedeem}
+                      onChange={(e) => handlePointsRedeemChange(parseInt(e.target.value) || 0)}
+                      placeholder="0"
+                      className="bg-white border-violet-200 rounded-lg h-9 text-sm focus:border-violet-400"
+                    />
+                  </div>
+
+                  {pointsToRedeem > 0 && (
+                    <>
+                      <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2.5 border border-violet-200 shadow-sm">
+                        <span className="text-xs text-violet-600 font-semibold">Potongan Poin</span>
+                        <span className="text-sm font-bold text-violet-900">−{formatCurrency(pointDiscount)}</span>
+                      </div>
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        ⚠️ Member tidak mendapatkan poin saat menukarkan poin
+                      </p>
+                    </>
+                  )}
+                </section>
               )}
 
-              {/* Summary */}
+              {/* ─── 7. RINGKASAN ─── */}
               {items.length > 0 && (
-                <div className="space-y-2 pt-4 border-t">
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal:</span>
-                    <span className="font-medium">{formatCurrency(subtotal)}</span>
+                <section className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                  <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Ringkasan</span>
                   </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>Discount:</span>
-                      <span className="font-medium">-{formatCurrency(discount)}</span>
+                  <div className="px-4 py-3.5 space-y-2.5">
+                    <div className="flex justify-between items-center text-sm text-gray-500">
+                      <span>Subtotal</span>
+                      <span className="font-semibold text-gray-700 tabular-nums">{formatCurrency(subtotal)}</span>
                     </div>
-                  )}
-                  {pointsToRedeem > 0 && (
-                    <div className="flex justify-between text-sm text-purple-600">
-                      <span>Point Discount ({pointsToRedeem} poin):</span>
-                      <span className="font-medium">-{formatCurrency(pointDiscount)}</span>
-                    </div>
-                  )}
-                  {tax > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span>Tax:</span>
-                      <span className="font-medium">{formatCurrency(tax)}</span>
-                    </div>
-                  )}
-                  {ongkir > 0 && (
-                    <div className="flex justify-between text-sm text-orange-600">
-                      <span>Ongkir:</span>
-                      <span className="font-medium">+{formatCurrency(ongkir)}</span>
-                    </div>
-                  )}
+                    {discount > 0 && (
+                      <div className="flex justify-between items-center text-sm text-emerald-600">
+                        <span>Diskon</span>
+                        <span className="font-semibold tabular-nums">−{formatCurrency(discount)}</span>
+                      </div>
+                    )}
+                    {pointsToRedeem > 0 && (
+                      <div className="flex justify-between items-center text-sm text-violet-600">
+                        <span>Poin ({pointsToRedeem} pts)</span>
+                        <span className="font-semibold tabular-nums">−{formatCurrency(pointDiscount)}</span>
+                      </div>
+                    )}
+                    {tax > 0 && (
+                      <div className="flex justify-between items-center text-sm text-gray-500">
+                        <span>Pajak</span>
+                        <span className="font-semibold tabular-nums">+{formatCurrency(tax)}</span>
+                      </div>
+                    )}
+                    {ongkir > 0 && (
+                      <div className="flex justify-between items-center text-sm text-orange-500">
+                        <span>Ongkir</span>
+                        <span className="font-semibold tabular-nums">+{formatCurrency(ongkir)}</span>
+                      </div>
+                    )}
 
-                  {/* Warning when total discount is high */}
-                  {(discount + pointDiscount) > subtotal * 0.8 && (discount + pointDiscount) <= subtotal && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-xs text-yellow-800">
-                      ⚠️ Total discount is {Math.round((discount + pointDiscount) / subtotal * 100)}% of subtotal
-                    </div>
-                  )}
+                    {(discount + pointDiscount) > subtotal * 0.8 && (discount + pointDiscount) <= subtotal && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+                        ⚠️ Total diskon {Math.round((discount + pointDiscount) / subtotal * 100)}% dari subtotal
+                      </div>
+                    )}
+                    {(discount + pointDiscount) > subtotal && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700">
+                        ❌ Total diskon melebihi subtotal! Kurangi diskon atau poin.
+                      </div>
+                    )}
 
-                  {/* Error when total discount exceeds subtotal */}
-                  {(discount + pointDiscount) > subtotal && (
-                    <div className="bg-red-50 border border-red-200 rounded p-2 text-xs text-red-800">
-                      ❌ Total discount melebihi subtotal! Kurangi discount atau points.
+                    <div className={`flex justify-between items-center pt-3 border-t border-gray-200 ${total < 0 ? 'text-red-600' : total === 0 ? 'text-amber-600' : 'text-gray-900'}`}>
+                      <span className="font-bold text-base">Total</span>
+                      <span className="text-2xl font-bold tabular-nums">{formatCurrency(Math.max(0, total))}</span>
                     </div>
-                  )}
 
-                  <div className={`flex justify-between text-lg font-bold pt-2 border-t ${total < 0 ? 'text-red-600' : total === 0 ? 'text-yellow-600' : 'text-gray-900'
-                    }`}>
-                    <span>Total:</span>
-                    <span>{formatCurrency(Math.max(0, total))}</span>
-                  </div>
-                  {/* Points earned - only for members */}
-                  {items.length > 0 && customerType === 'member' && customerId && (
-                    <div className={`flex items-center justify-between px-3 py-2 rounded-md text-sm mt-1 ${pointsToRedeem > 0
-                      ? 'bg-orange-50 border border-orange-200'
-                      : pointsEarned > 0
-                        ? 'bg-green-50 border border-green-200'
-                        : 'bg-gray-50 border border-gray-200'
+                    {customerType === 'member' && customerId && (
+                      <div className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
+                        pointsToRedeem > 0
+                          ? 'bg-amber-50 border border-amber-200'
+                          : pointsEarned > 0
+                            ? 'bg-emerald-50 border border-emerald-200'
+                            : 'bg-gray-50 border border-gray-200'
                       }`}>
-                      <span className={`font-medium ${pointsToRedeem > 0 ? 'text-orange-700' : pointsEarned > 0 ? 'text-green-700' : 'text-gray-500'
-                        }`}>
-                        🎁 Poin Diperoleh:
-                      </span>
-                      <span className={`font-bold ${pointsToRedeem > 0 ? 'text-orange-600' : pointsEarned > 0 ? 'text-green-800' : 'text-gray-400'
-                        }`}>
-                        {pointsToRedeem > 0 ? '0 poin (penukaran aktif)' : `+${pointsEarned} poin`}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
+                        <span className={`font-semibold ${pointsToRedeem > 0 ? 'text-amber-700' : pointsEarned > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>
+                          🎁 Poin Diperoleh
+                        </span>
+                        <span className={`font-bold ${pointsToRedeem > 0 ? 'text-amber-600' : pointsEarned > 0 ? 'text-emerald-800' : 'text-gray-400'}`}>
+                          {pointsToRedeem > 0 ? '0 poin (penukaran aktif)' : `+${pointsEarned} poin`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </section>
               )}
             </>
           )}
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        {/* ── Footer ── */}
+        <DialogFooter className="px-5 py-4 border-t bg-white shrink-0 gap-2.5 flex-row">
           <Button
             type="button"
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={loading}
-            className="w-full sm:w-auto"
+            className="flex-1 sm:flex-none h-10 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl font-medium"
           >
-            Cancel
+            Batal
           </Button>
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={loading || items.length === 0 || (!customerId && !nonMemberCustomerId) || (discount + pointDiscount) > subtotal || total < 0}
-            className="w-full sm:w-auto"
+            disabled={
+              loading ||
+              items.length === 0 ||
+              (!customerId && !nonMemberCustomerId) ||
+              (discount + pointDiscount) > subtotal ||
+              total < 0
+            }
+            className="flex-1 h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-bold gap-2 transition-colors"
           >
-            {loading ? 'Processing...' : 'Complete Sale'}
+            {loading ? (
+              <>
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                Memproses...
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                Selesaikan Transaksi
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
