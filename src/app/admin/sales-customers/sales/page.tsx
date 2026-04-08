@@ -229,7 +229,7 @@ export default async function AdminSalesPage({
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
         <NewSaleDialog
           variants={variants}
@@ -242,7 +242,7 @@ export default async function AdminSalesPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Penjualan Terbaru</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Penjualan Terbaru</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar */}

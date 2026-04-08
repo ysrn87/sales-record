@@ -98,7 +98,7 @@ export default async function AdminProductsPage({
   const products = await getProducts({ search, status, sort });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
         <ProductDialog mode="create" />
       </div>
@@ -128,7 +128,7 @@ export default async function AdminProductsPage({
       />
 
       {/* Products Cards */}
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {products.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
@@ -143,17 +143,17 @@ export default async function AdminProductsPage({
           products.map((product: typeof products[number]) => (
             <Card key={product.id}>
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{product.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg md:text-xl">{product.name}</CardTitle>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1">
                       SKU: {product.sku} • {product.variants.length} varian
                     </p>
                     {product.description && (
-                      <p className="text-sm text-gray-600 mt-2">{product.description}</p>
+                      <p className="text-xs md:text-sm text-gray-600 mt-2">{product.description}</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-shrink-0">
                     <ProductDialog 
                       mode="edit" 
                       product={{
@@ -180,64 +180,122 @@ export default async function AdminProductsPage({
                 ) : (
                   <div>
                     <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-medium">Varian</h4>
+                      <h4 className="text-sm md:text-base font-medium">Varian</h4>
                       <VariantDialog mode="create" productId={product.id} />
                     </div>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>SKU</TableHead>
-                          <TableHead>Nama</TableHead>
-                          <TableHead>Harga</TableHead>
-                          {/* <TableHead>Cost</TableHead> */}
-                          <TableHead>Stok</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody className='text-xs'>
-                        {product.variants.map((variant: typeof product.variants[number]) => (
-                          <TableRow key={variant.id}>
-                            <TableCell>{variant.sku}</TableCell>
-                            <TableCell className="font-medium truncate">{variant.name}</TableCell>
-                            <TableCell>{formatCurrency(variant.price)}</TableCell>
-                            {/* <TableCell>{formatCurrency(variant.cost)}</TableCell> */}
-                            <TableCell>
-                              <span className={variant.stock <= variant.lowStock ? 'text-red-600 font-medium' : ''}>
-                                {variant.stock}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                variant.isActive 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {variant.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex gap-2 justify-end">
-                                <VariantDialog 
-                                  mode="edit" 
-                                  variant={{
-                                    id: variant.id,
-                                    name: variant.name,
-                                    sku: variant.sku,
-                                    price: variant.price,
-                                    cost: variant.cost,
-                                    stock: variant.stock,
-                                    lowStock: variant.lowStock,
-                                    points: variant.points,
-                                  }} 
-                                />
-                                <VariantDeleteButton variantId={variant.id} />
-                              </div>
-                            </TableCell>
+                    
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>SKU</TableHead>
+                            <TableHead>Nama</TableHead>
+                            <TableHead>Harga</TableHead>
+                            {/* <TableHead>Cost</TableHead> */}
+                            <TableHead>Stok</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody className='text-xs'>
+                          {product.variants.map((variant: typeof product.variants[number]) => (
+                            <TableRow key={variant.id}>
+                              <TableCell>{variant.sku}</TableCell>
+                              <TableCell className="font-medium truncate">{variant.name}</TableCell>
+                              <TableCell>{formatCurrency(variant.price)}</TableCell>
+                              {/* <TableCell>{formatCurrency(variant.cost)}</TableCell> */}
+                              <TableCell>
+                                <span className={variant.stock <= variant.lowStock ? 'text-red-600 font-medium' : ''}>
+                                  {variant.stock}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  variant.isActive 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {variant.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex gap-2 justify-end">
+                                  <VariantDialog 
+                                    mode="edit" 
+                                    variant={{
+                                      id: variant.id,
+                                      name: variant.name,
+                                      sku: variant.sku,
+                                      price: variant.price,
+                                      cost: variant.cost,
+                                      stock: variant.stock,
+                                      lowStock: variant.lowStock,
+                                      points: variant.points,
+                                    }} 
+                                  />
+                                  <VariantDeleteButton variantId={variant.id} />
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-3">
+                      {product.variants.map((variant: typeof product.variants[number]) => (
+                        <div key={variant.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                          {/* Header */}
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1 min-w-0 mr-2">
+                              <p className="text-sm font-bold text-gray-900 truncate">{variant.name}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">SKU: {variant.sku}</p>
+                            </div>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
+                              variant.isActive 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {variant.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+
+                          {/* Details Grid */}
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                              <p className="text-xs text-gray-500">Harga</p>
+                              <p className="text-sm font-semibold text-[#028697]">{formatCurrency(variant.price)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Stok</p>
+                              <p className={`text-sm font-semibold ${variant.stock <= variant.lowStock ? 'text-red-600' : 'text-gray-900'}`}>
+                                {variant.stock} unit
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2 pt-2 border-t border-gray-200">
+                            <VariantDialog 
+                              mode="edit" 
+                              variant={{
+                                id: variant.id,
+                                name: variant.name,
+                                sku: variant.sku,
+                                price: variant.price,
+                                cost: variant.cost,
+                                stock: variant.stock,
+                                lowStock: variant.lowStock,
+                                points: variant.points,
+                              }} 
+                            />
+                            <VariantDeleteButton variantId={variant.id} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </CardContent>

@@ -261,41 +261,41 @@ export default async function AdminStockPage({
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
       </div>
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">Total Produk</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalVariants}</div>
-            <p className="text-xs text-muted-foreground">Varian produk</p>
+            <div className="text-xl md:text-2xl font-bold">{stats.totalVariants}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Varian produk</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Stok Kurang</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">Stok Kurang</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.lowStockCount}</div>
-            <p className="text-xs text-muted-foreground">Butuh penambahan</p>
+            <div className="text-xl md:text-2xl font-bold text-red-600">{stats.lowStockCount}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Butuh penambahan</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Stok</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">Total Stok</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalStock}</div>
-            <p className="text-xs text-muted-foreground">Total unit</p>
+            <div className="text-xl md:text-2xl font-bold">{stats.totalStock}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Total unit</p>
           </CardContent>
         </Card>
       </div>
@@ -303,7 +303,7 @@ export default async function AdminStockPage({
       {/* Stock Items Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Ketersediaan Item</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Ketersediaan Item</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar for Stock Items */}
@@ -344,7 +344,7 @@ export default async function AdminStockPage({
       {/* Recent Stock Movements */}
       <Card>
         <CardHeader>
-          <CardTitle>Riwayat Sirkulasi Barang</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Riwayat Sirkulasi Barang</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar for Stock Movements */}

@@ -125,60 +125,60 @@ export default async function AdminCashflowPage({
   const stats = await getCashflowStats();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
         <CashflowDialog />
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pemasukan</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">Total Pemasukan</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-xl md:text-2xl font-bold text-green-600">
               {formatCurrency(stats.income)}
             </div>
-            <p className="text-xs text-muted-foreground">Total pendapatan</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Total pendapatan</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pengeluaran</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">Total Pengeluaran</CardTitle>
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-xl md:text-2xl font-bold text-red-600">
               {formatCurrency(stats.expense)}
             </div>
-            <p className="text-xs text-muted-foreground">Total biaya</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Total biaya</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit Bersih</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">Profit Bersih</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-xl md:text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(stats.balance)}
             </div>
-            <p className="text-xs text-muted-foreground">Pendapatan - Pengeluaran</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Pendapatan - Pengeluaran</p>
           </CardContent>
         </Card>
       </div>
-      <div className={`text-sm font-medium ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+      <div className={`text-xs md:text-sm font-medium ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
         <p>Bagi hasil system (10%) • {stats.balance >= 0 ? formatCurrency(stats.balance/10) : formatCurrency(0)}</p>
       </div>
 
       {/* Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Riwayat Transaksi</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Riwayat Transaksi</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar */}

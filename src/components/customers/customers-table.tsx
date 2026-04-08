@@ -97,7 +97,8 @@ export function CustomersTable({
 
   return (
     <>
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader className="text-center">
             <TableRow>
@@ -192,6 +193,84 @@ export function CustomersTable({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {customers.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Tidak ditemukan pelanggan</p>
+          </div>
+        ) : (
+          customers.map((customer) => {
+            const totalSpent = customer.sales.reduce((sum, sale) => sum + Number(sale.total), 0);
+            const isMember = customer.type === 'member';
+
+            return (
+              <div
+                key={customer.id}
+                onClick={() => handleViewDetails(customer)}
+                className="bg-white border border-gray-200 rounded-xl p-4 active:bg-gray-50 transition-colors"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{customer.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{customer.phone}</p>
+                  </div>
+                  <div className="ml-3 flex-shrink-0">
+                    {isMember ? (
+                      <Badge variant="default" className="bg-blue-600 text-xs">Member</Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">Non-Member</Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Points (if member) */}
+                {isMember && (
+                  <div 
+                    className="mb-3 pb-3 border-b border-gray-100"
+                    onClick={(e) => { e.stopPropagation(); handleViewPoints(customer as MemberCustomer); }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Award className="h-4 w-4 text-yellow-600" />
+                      <span className="text-xs text-gray-500">Points:</span>
+                      <span className="text-sm font-bold text-yellow-700">{customer.points}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Total Belanja</p>
+                    <p className="text-sm font-bold text-[#028697]">{formatCurrency(totalSpent)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Transaksi</p>
+                    <p className="text-sm font-semibold text-gray-900">{customer._count.sales}x</p>
+                  </div>
+                </div>
+
+                {/* Additional Info */}
+                {customer.address && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">Alamat:</p>
+                    <p className="text-xs text-gray-700 line-clamp-2">{customer.address}</p>
+                  </div>
+                )}
+
+                {/* Member email */}
+                {isMember && customer.email && (
+                  <div className="pt-2">
+                    <p className="text-xs text-gray-500 truncate">{customer.email}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
 
       <Pagination

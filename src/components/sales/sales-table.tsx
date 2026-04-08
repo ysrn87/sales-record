@@ -57,51 +57,120 @@ export function SalesTable({ sales, currentPage, pageSize, totalItems, conversio
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Sale ID #</TableHead>
-            <TableHead>Tanggal</TableHead>
-            <TableHead>Customer</TableHead>
-            <TableHead>Cashier</TableHead>
-            <TableHead>Item</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Pembayaran</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Note</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody className='text-xs'>
-          {sales.map((sale) => {
-            const statusCfg = paymentStatusConfig[sale.paymentStatus] ?? paymentStatusConfig.PAID;
-            return (
-              <TableRow
-                key={sale.id}
-                className="cursor-pointer hover:bg-muted/60"
-                onClick={() => handleViewDetails(sale)}
-              >
-                <TableCell className="font-medium truncate">{sale.saleNumber}</TableCell>
-                <TableCell className='truncate'>{formatDateTime(sale.createdAt)}</TableCell>
-                <TableCell className='truncate'>{sale.customer?.name || sale.nonMemberCustomer?.name || 'Pelanggan-umum'}</TableCell>
-                <TableCell>{sale.cashier.name}</TableCell>
-                <TableCell>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} unit</TableCell>
-                <TableCell>{formatCurrency(sale.total)}</TableCell>
-                <TableCell>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {sale.paymentMethod}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusCfg.className}`}>
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Sale ID #</TableHead>
+              <TableHead>Tanggal</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Cashier</TableHead>
+              <TableHead>Item</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Pembayaran</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Note</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className='text-xs'>
+            {sales.map((sale) => {
+              const statusCfg = paymentStatusConfig[sale.paymentStatus] ?? paymentStatusConfig.PAID;
+              return (
+                <TableRow
+                  key={sale.id}
+                  className="cursor-pointer hover:bg-muted/60"
+                  onClick={() => handleViewDetails(sale)}
+                >
+                  <TableCell className="font-medium truncate">{sale.saleNumber}</TableCell>
+                  <TableCell className='truncate'>{formatDateTime(sale.createdAt)}</TableCell>
+                  <TableCell className='truncate'>{sale.customer?.name || sale.nonMemberCustomer?.name || 'Pelanggan-umum'}</TableCell>
+                  <TableCell>{sale.cashier.name}</TableCell>
+                  <TableCell>{sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0)} unit</TableCell>
+                  <TableCell>{formatCurrency(sale.total)}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {sale.paymentMethod}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${statusCfg.className}`}>
+                      {statusCfg.label}
+                    </span>
+                  </TableCell>
+                  <TableCell className='truncate'>{sale.notes || '-'}</TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {sales.map((sale) => {
+          const statusCfg = paymentStatusConfig[sale.paymentStatus] ?? paymentStatusConfig.PAID;
+          const totalItems = sale.items.reduce((sum: any, item: any) => sum + item.quantity, 0);
+          return (
+            <div
+              key={sale.id}
+              onClick={() => handleViewDetails(sale)}
+              className="bg-white border border-gray-200 rounded-xl p-4 active:bg-gray-50 transition-colors"
+            >
+              {/* Header Row */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{sale.saleNumber}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{formatDateTime(sale.createdAt)}</p>
+                </div>
+                <div className="ml-3 flex-shrink-0">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${statusCfg.className}`}>
                     {statusCfg.label}
                   </span>
-                </TableCell>
-                <TableCell className='truncate'>{sale.notes || '-'}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                </div>
+              </div>
+
+              {/* Customer & Cashier */}
+              <div className="space-y-2 mb-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500 text-xs">Customer:</span>
+                  <span className="font-medium text-gray-900 truncate ml-2 max-w-[180px]">
+                    {sale.customer?.name || sale.nonMemberCustomer?.name || 'Pelanggan-umum'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500 text-xs">Cashier:</span>
+                  <span className="font-medium text-gray-900 truncate ml-2 max-w-[180px]">
+                    {sale.cashier.name}
+                  </span>
+                </div>
+              </div>
+
+              {/* Amount & Details */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+                    {sale.paymentMethod}
+                  </span>
+                  <span className="text-xs text-gray-500">{totalItems} unit</span>
+                </div>
+                <div className="text-base font-bold text-[#028697]">
+                  {formatCurrency(sale.total)}
+                </div>
+              </div>
+
+              {/* Note if exists */}
+              {sale.notes && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-600 line-clamp-2">
+                    <span className="font-medium">Note:</span> {sale.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       <Pagination
         currentPage={currentPage}

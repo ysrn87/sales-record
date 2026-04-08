@@ -257,14 +257,27 @@ export function Navigation({ role, userName }: NavigationProps) {
               </form>
             </div>
 
-            {/* Mobile – compact user chip in top bar (no hamburger) */}
+            {/* Mobile – user info + logout in top bar */}
             <div className="flex lg:hidden items-center gap-2">
-              <span className="text-xs font-medium text-gray-500 max-w-[80px] truncate">
-                {userName || 'User'}
-              </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#e0f9fc] text-[#028697]">
-                {role}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-gray-600 max-w-[70px] truncate">
+                  {userName || 'User'}
+                </span>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[#e0f9fc] text-[#028697]">
+                  {role}
+                </span>
+              </div>
+              <form action={logoutAction}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="submit"
+                  className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </form>
             </div>
 
           </div>
@@ -315,20 +328,6 @@ export function Navigation({ role, userName }: NavigationProps) {
                 </Link>
               );
             })}
-
-            {/* Logout tab */}
-            <form action={logoutAction} className="flex-1">
-              <button
-                type="submit"
-                className="relative w-full h-full flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 group"
-              >
-                <span className="absolute inset-0 rounded-xl opacity-0 group-active:opacity-100 group-hover:opacity-100 bg-red-50 transition-opacity duration-150" />
-                <LogOut className="relative z-10 w-5 h-5 text-gray-400 group-hover:text-red-500 group-active:text-red-500 transition-colors duration-200" />
-                <span className="relative z-10 text-[9px] font-semibold leading-none tracking-wide text-gray-400 group-hover:text-red-500 group-active:text-red-500 transition-colors duration-200">
-                  Keluar
-                </span>
-              </button>
-            </form>
 
           </div>
         </div>

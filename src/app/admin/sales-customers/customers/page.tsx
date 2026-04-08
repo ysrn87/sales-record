@@ -177,14 +177,14 @@ export default async function AdminCustomersPage({
   const { customers, total } = await getCustomers({ page, limit, search, points, sort });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
         <CustomerDialog mode="create" />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Pelanggan</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Daftar Pelanggan</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar */}
