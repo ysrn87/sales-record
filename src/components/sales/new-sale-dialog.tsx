@@ -318,8 +318,8 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
               <ShoppingCart className="w-4 h-4 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold text-gray-900">Penjualan Baru</DialogTitle>
-              <p className="text-xs text-gray-400 mt-0.5">Isi detail transaksi di bawah ini</p>
+              <DialogTitle className="text-base font-semibold text-gray-900 text-left">Penjualan Baru</DialogTitle>
+              <p className="text-xs text-gray-400 mt-0.5 text-left">Isi detail transaksi di bawah ini</p>
             </div>
           </div>
         </DialogHeader>

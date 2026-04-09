@@ -85,7 +85,7 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <UserPlus className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-blue-900">Add New Customer</h3>
+          <h3 className="font-semibold text-blue-900">Tambah Pelanggan Baru</h3>
         </div>
         <Button
           type="button"
@@ -102,14 +102,14 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid gap-2">
           <Label htmlFor="quick-name" className="text-sm">
-            Name <span className="text-red-500">*</span>
+            Nama <span className="text-red-500">*</span>
           </Label>
           <Input
             id="quick-name"
             type="text"
             value={name}
             onChange={handleNameChange}
-            placeholder="Customer Name"
+            placeholder="Nama Customer"
             required
             disabled={loading}
             maxLength={80}
@@ -144,7 +144,7 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
 
         <div className="grid gap-2">
           <Label htmlFor="quick-address" className="text-sm">
-            Address <span className="text-red-500">*</span>
+            Alamat <span className="text-red-500">*</span>
           </Label>
           <Textarea
             id="quick-address"
@@ -153,12 +153,12 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
             placeholder="Street, City, Postal Code"
             required
             disabled={loading}
-            maxLength={150}
+            maxLength={250}
             rows={2}
             className="bg-white resize-none"
           />
           <p className="text-xs text-gray-500 text-right">
-            {address.length}/150 characters
+            {address.length}/250 karakter
           </p>
         </div>
 
@@ -170,14 +170,14 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
             disabled={loading}
             className="flex-1"
           >
-            Cancel
+            Batal
           </Button>
           <Button
             type="submit"
             disabled={loading || !name || !phone || !address}
             className="flex-1 bg-blue-600 hover:bg-blue-700"
           >
-            {loading ? 'Adding...' : 'Add Customer'}
+            {loading ? 'Menambahkan...' : 'Tambah'}
           </Button>
         </div>
       </form>

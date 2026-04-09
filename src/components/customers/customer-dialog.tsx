@@ -206,10 +206,10 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
                 onChange={(e) => setAddress(e.target.value)}
                 disabled={loading}
                 required
-                maxLength={150}
+                maxLength={250}
               />
             <p className="text-xs text-gray-500 text-right">
-              {address.length}/150 karakter
+              {address.length}/250 karakter
             </p>
             </div>
 

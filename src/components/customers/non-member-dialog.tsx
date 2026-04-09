@@ -155,10 +155,10 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
                 onChange={(e) => setAddress(e.target.value)}
                 required
                 disabled={loading}
-                maxLength={150}
+                maxLength={250}
                 placeholder="Nama Jalan, Kota, Kode Pos"
               />
-              <p className="text-xs text-gray-500 text-right">{address.length}/150 karakter</p>
+              <p className="text-xs text-gray-500 text-right">{address.length}/250 karakter</p>
             </div>
           </div>
 

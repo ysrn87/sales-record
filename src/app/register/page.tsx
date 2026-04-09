@@ -308,10 +308,10 @@ export default function RegisterPage() {
                 placeholder="Nama Jalan, Kota, Kode Pos"
                 value={address} required
                 onChange={(e) => setAddress(e.target.value)}
-                disabled={loading} maxLength={150}
+                disabled={loading} maxLength={250}
                 className="h-11 text-sm focus-visible:ring-[#1ecbe1]"
               />
-              <p className="text-xs text-gray-500 text-right">{address.length}/150 karakter</p>
+              <p className="text-xs text-gray-500 text-right">{address.length}/250 karakter</p>
             </div>
 
             {/* Email */}
