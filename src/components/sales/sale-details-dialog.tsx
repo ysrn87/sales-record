@@ -479,9 +479,12 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
           <DialogHeader>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
               <div>
-                <DialogTitle>Sale Details</DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {sale.saleNumber} • {formatDateTime(sale.createdAt)}
+                <DialogTitle className='text-md'>Sale Details</DialogTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {sale.saleNumber}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                   • {formatDateTime(sale.createdAt)} • 
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap">

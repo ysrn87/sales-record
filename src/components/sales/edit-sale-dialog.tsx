@@ -104,7 +104,7 @@ export function EditSaleDialog({
 
   const { toast } = useToast();
 
-  const canManageProducts = userRole === 'ADMINISTRATOR' || userRole === 'MANAGER';
+  const canManageProducts = userRole === 'ADMIN' || userRole === 'MANAGER';
   const pointsRedeemed = sale.pointsRedeemed || 0;
   const pointDiscount = pointsRedeemed * conversionRate;
   const customerName = sale.customer?.name ?? sale.nonMemberCustomer?.name ?? 'Pelanggan Umum';
@@ -245,8 +245,14 @@ export function EditSaleDialog({
               <Pencil className="w-4 h-4 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-base font-semibold text-gray-900 text-left">Edit Penjualan - {customerName}</DialogTitle>
-              <p className="text-xs text-gray-400 mt-0.5 text-left">Perbarui transaksi {sale.saleNumber && <span className="font-semibold text-gray-600">{sale.saleNumber}</span>}</p>
+              <DialogTitle className="text-base font-semibold text-gray-900 text-left">
+                Edit Penjualan — {customerName}
+              </DialogTitle>
+              <p className="text-xs text-gray-400 mt-0.5 text-left">
+                Perbarui transaksi{sale.saleNumber && (
+                  <span className="font-semibold text-gray-600"> {sale.saleNumber}</span>
+                )}
+              </p>
             </div>
           </div>
         </DialogHeader>
@@ -263,7 +269,7 @@ export function EditSaleDialog({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-gray-900 truncate">{customerName}</p>
-                <p className="text-xs text-gray-400">{sale.customerId ? 'Member' : 'Non-Member / Walk-in'}</p>
+                <p className="text-xs text-gray-400">{sale.customerId ? 'Member' : 'Non-Member'}</p>
               </div>
               <span className="text-[10px] text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full font-medium shrink-0">
                 Tidak dapat diubah
@@ -292,35 +298,59 @@ export function EditSaleDialog({
               </div>
             ) : (
               <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="grid grid-cols-[1fr,110px,auto] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                {/* Table header */}
+                <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Produk</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Qty</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right pr-8">Total</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</span>
                 </div>
-                <div className="divide-y divide-gray-100 max-h-[260px] overflow-y-auto">
+
+                {/* Item rows */}
+                <div className="divide-y divide-gray-100 max-h-[300px] overflow-y-auto">
                   {items.map((item, index) => (
-                    <div key={index} className="px-3 py-2.5 hover:bg-gray-50/70 transition-colors">
-                      <div className="grid grid-cols-[1fr,110px,auto] gap-2 items-center">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate leading-tight">{item.variantName}</p>
-                          <p className="text-xs text-gray-500 truncate leading-tight">{item.productName}</p>
-                          {canManageProducts ? (
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="text-[10px] text-gray-400">Harga:</span>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                value={item.priceDisplay ?? item.price.toLocaleString('en-US')}
-                                onChange={(e) => updatePrice(index, e.target.value)}
-                                disabled={loading}
-                                className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 w-24 focus:outline-none focus:border-amber-400"
-                              />
-                            </div>
-                          ) : (
-                            <p className="text-xs text-gray-400 mt-1">{formatCurrency(item.price)}/pcs</p>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
+                    <div key={index} className="px-3 py-3 hover:bg-gray-50/60 transition-colors space-y-0.5">
+
+                      {/* Row 1 — Variant name (left) · Delete icon (right) */}
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-900 leading-snug break-words flex-1">
+                          {item.variantName}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          disabled={loading || items.length === 1}
+                          className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-30"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Row 2 — Product name */}
+                      <p className="text-xs text-amber-600 leading-snug break-words">
+                        {item.productName}
+                      </p>
+
+                      {/* Row 3 — Price (editable or read-only) */}
+                      <div className="pt-0.5">
+                        {canManageProducts ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-gray-400 shrink-0">Rp</span>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={item.priceDisplay ?? item.price.toLocaleString('en-US')}
+                              onChange={(e) => updatePrice(index, e.target.value)}
+                              disabled={loading}
+                              className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 w-28 focus:outline-none focus:border-amber-400"
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400">{formatCurrency(item.price)}/pcs</p>
+                        )}
+                      </div>
+
+                      {/* Row 4 — Qty stepper (left) · Row total (right) */}
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => updateQuantity(index, item.quantity - 1)}
@@ -329,7 +359,9 @@ export function EditSaleDialog({
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="text-xs font-bold text-gray-800 w-6 text-center tabular-nums">{item.quantity}</span>
+                          <span className="text-xs font-bold text-gray-800 w-7 text-center tabular-nums">
+                            {item.quantity}
+                          </span>
                           <button
                             type="button"
                             onClick={() => updateQuantity(index, item.quantity + 1)}
@@ -339,21 +371,16 @@ export function EditSaleDialog({
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
-                        <div className="flex items-center gap-1 justify-end">
-                          <span className="text-xs font-bold text-gray-900 tabular-nums whitespace-nowrap">
-                            {formatCurrency(item.price * item.quantity)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeItem(index)}
-                            disabled={loading || items.length === 1}
-                            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors ml-1 disabled:opacity-30"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        <span className="text-sm font-bold text-gray-900 tabular-nums whitespace-nowrap">
+                          {formatCurrency(item.price * item.quantity)}
+                        </span>
                       </div>
-                      <p className="text-[10px] text-gray-300 mt-1">Tersedia: {item.currentStock} pcs</p>
+
+                      {/* Row 5 — Stock info */}
+                      <p className="text-[10px] text-gray-300 pt-0.5">
+                        Stok: {item.currentStock} pcs
+                      </p>
+
                     </div>
                   ))}
                 </div>
@@ -375,10 +402,15 @@ export function EditSaleDialog({
                       <Package className="w-4 h-4 text-amber-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {selectedVariant.product.name} — {selectedVariant.name}
+                      <p className="text-sm font-semibold text-gray-900 break-words leading-snug">
+                        {selectedVariant.product.name}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      {selectedVariant.name !== selectedVariant.product.name && (
+                        <p className="text-xs text-amber-600 font-medium leading-tight">
+                          {selectedVariant.name}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-0.5">
                         {formatCurrency(selectedVariant.price)} · Stok: {selectedVariant.stock}
                       </p>
                     </div>
@@ -413,8 +445,17 @@ export function EditSaleDialog({
                           className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${selectedVariantId === variant.id ? 'bg-amber-50' : ''}`}
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">{variant.product.name} — {variant.name}</p>
-                            <p className="text-xs text-gray-400">{formatCurrency(variant.price)} · Stok: {variant.stock}</p>
+                            <p className="text-sm font-medium text-gray-900 break-words leading-snug">
+                              {variant.product.name}
+                            </p>
+                            {variant.name !== variant.product.name && (
+                              <p className="text-xs text-amber-600 font-medium leading-tight">
+                                {variant.name}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {formatCurrency(variant.price)} · Stok: {variant.stock}
+                            </p>
                           </div>
                           {selectedVariantId === variant.id && (
                             <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
@@ -474,7 +515,7 @@ export function EditSaleDialog({
               <div className="space-y-1.5">
                 <Label className="text-xs text-gray-500 font-medium">Metode</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod} disabled={loading}>
-                  <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-xs text-left border-gray-200 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="CASH">💵 Cash</SelectItem>
                     <SelectItem value="CARD">💳 Kartu</SelectItem>
@@ -485,11 +526,11 @@ export function EditSaleDialog({
               <div className="space-y-1.5">
                 <Label className="text-xs text-gray-500 font-medium">Status</Label>
                 <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)} disabled={loading}>
-                  <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-9 text-xs text-left border-gray-200 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PAID">✅ Lunas</SelectItem>
+                    <SelectItem value="UNPAID">❌ Belum Bayar</SelectItem>
                     <SelectItem value="PENDING">⏳ Pending</SelectItem>
-                    <SelectItem value="UNPAID">❌ Belum Lunas</SelectItem>
+                    <SelectItem value="PAID">✅ Lunas</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
