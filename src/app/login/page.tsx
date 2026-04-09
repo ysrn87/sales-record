@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { LogIn, Mail, Lock, UserPlus, ShoppingBag, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Mail, Lock, UserPlus, ShoppingBag, Sparkles, Eye, EyeOff, Notebook } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -46,7 +46,7 @@ function LoginForm() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#0fa8be] rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 relative z-10 backdrop-blur-sm bg-white/95">
+      <Card className="w-3/4 max-w-md shadow-2xl relative z-10 backdrop-blur-lg bg-transparent">
         <CardHeader className="space-y-3 pb-6">
           <div className="mx-auto w-16 h-16 bg-[#028697] rounded-2xl flex items-center justify-center shadow-lg">
             <ShoppingBag className="w-8 h-8 text-white" />
@@ -61,7 +61,7 @@ function LoginForm() {
         <CardContent className="space-y-6">
           <form action={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier" className="text-xs font-medium flex items-center gap-2">
+              <Label htmlFor="identifier" className="text-xs font-light flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-500" />
                 Email atau No. WhatsApp
               </Label>
@@ -76,7 +76,7 @@ function LoginForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-xs font-medium flex items-center gap-2">
+              <Label htmlFor="password" className="text-xs font-light flex items-center gap-2">
                 <Lock className="w-4 h-4 text-gray-500" />
                 Password
               </Label>
@@ -134,20 +134,20 @@ function LoginForm() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-teal-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">Belum memiliki akun?</span>
+              <span className="px-4 bg-[#028697] rounded-lg text-white">atau</span>
             </div>
           </div>
 
-          <Link href="/register" className="block text-xs">
+          <Link href="/landing" className="block text-xs">
             <Button
               variant="outline"
-              className="w-full h-11 font-semibold border-2 border-[#028697] text-[#028697] hover:bg-[#e0f9fc] transition-all duration-200"
+              className="w-full h-7 font-semibold border-0 text-[#028697] hover:bg-[#e0f9fc] hover:text-[#00545f] transition-all duration-200"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Register Member
+              <Notebook className="w-4 h-4 mr-2" />
+              lihat katalog
             </Button>
           </Link>
         </CardContent>

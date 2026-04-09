@@ -53,12 +53,12 @@ export default async function LandingPage() {
 
           {/* Auth */}
           <div className="flex items-center gap-1.5">
-            <Link
+            {/* <Link
               href="/register"
               className="text-xs font-medium text-slate-500 hover:text-[#028697] transition-colors px-3 py-1.5 rounded-md hover:bg-[#e0f9fc]"
             >
               Daftar
-            </Link>
+            </Link> */}
             <Link
               href="/login"
               className="text-xs font-semibold bg-[#028697] hover:bg-[#17a8bb] text-white transition-colors px-3.5 py-1.5 rounded-md"
@@ -263,7 +263,7 @@ export default async function LandingPage() {
             © {new Date().getFullYear()} Dapur Lisa. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
-            <Link href="/register" className="hover:text-[#028697] transition-colors">Daftar</Link>
+            {/* <Link href="/register" className="hover:text-[#028697] transition-colors">Daftar</Link> */}
             <Link href="/login"    className="hover:text-[#028697] transition-colors">Login</Link>
           </div>
         </div>
