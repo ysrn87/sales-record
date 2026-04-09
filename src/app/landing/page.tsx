@@ -210,7 +210,7 @@ export default async function LandingPage() {
                               )}
                             </div>
                             <a
-                              href={`https://wa.me/6282302312687?text=Halo%20Dapur%20Lisa!%20Saya%20ingin%20memesan%3A%20${encodeURIComponent(variant.name)}.`}
+                              href={`https://wa.me/6282331312555?text=Halo%20Dapur%20Lisa!%20Saya%20ingin%20memesan%3A%20${encodeURIComponent(variant.name)}.`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 bg-[#028697] hover:bg-[#17a8bb] text-white text-xs font-medium px-3 py-2 rounded-lg transition-all"
@@ -238,7 +238,7 @@ export default async function LandingPage() {
               Ada pertanyaan? Hubungi kami langsung melalui WhatsApp.
             </p>
             <a
-              href="https://wa.me/6282302312687?text=Halo%20Dapur%20Lisa!%20Saya%20ingin%20tahu%20lebih%20lanjut%20tentang%20produk."
+              href="https://wa.me/6282331312555?text=Halo%20Dapur%20Lisa!%20Saya%20ingin%20tahu%20lebih%20lanjut%20tentang%20produk."
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0 inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-all hover:shadow-md"
