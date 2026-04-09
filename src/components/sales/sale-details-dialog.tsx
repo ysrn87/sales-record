@@ -32,7 +32,7 @@ interface SaleDetailsDialogProps {
     nonMemberCustomer: {
       name: string;
       phone: string;
-      address: string;
+      address: string | null;
     } | null;
     cashier: {
       name: string;

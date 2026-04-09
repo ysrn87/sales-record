@@ -34,7 +34,7 @@ interface NonMemberCustomer {
   id: string;
   name: string;
   phone: string;
-  address: string;
+  address: string | null;
   createdAt: Date;
   sales: Array<{
     id: string;

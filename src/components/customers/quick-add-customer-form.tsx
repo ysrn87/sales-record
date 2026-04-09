@@ -10,7 +10,7 @@ import { createNonMemberCustomerAction } from '@/actions/customers';
 import { UserPlus, X } from 'lucide-react';
 
 interface QuickAddCustomerFormProps {
-  onSuccess: (customer: { id: string; name: string; phone: string; address: string }) => void;
+  onSuccess: (customer: { id: string; name: string; phone: string; address: string | null }) => void;
   onCancel: () => void;
 }
 
@@ -57,7 +57,7 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
           title: 'Success!',
           description: 'Customer added successfully.',
         });
-        onSuccess(result.data);
+        onSuccess({ ...result.data, address: result.data.address ?? '' });
         // Reset form
         setName('');
         setPhone('');

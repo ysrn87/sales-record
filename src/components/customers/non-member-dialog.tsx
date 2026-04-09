@@ -18,7 +18,7 @@ type CreateProps = {
 
 type EditProps = {
   mode: 'edit';
-  customer: { id: string; name: string; phone: string; address: string };
+  customer: { id: string; name: string; phone: string; address: string | null };
   trigger?: React.ReactNode;
 };
 
@@ -29,7 +29,7 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(mode === 'edit' ? customer.name : '');
   const [phone, setPhone] = useState(mode === 'edit' ? customer.phone : '');
-  const [address, setAddress] = useState(mode === 'edit' ? customer.address : '');
+  const [address, setAddress] = useState(mode === 'edit' ? (customer.address ?? '') : '');
   const { toast } = useToast();
 
   const handleOpenChange = (v: boolean) => {
@@ -38,7 +38,7 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
       if (mode === 'edit') {
         setName(customer.name);
         setPhone(customer.phone);
-        setAddress(customer.address);
+        setAddress(customer.address ?? '');
       } else {
         setName('');
         setPhone('');

@@ -75,6 +75,7 @@ async function getAllCustomers(page: number = 1, limit: number = 10) {
 
   const serializedNonMembers = nonMembers.map((customer) => ({
     ...customer,
+    address: customer.address ?? '',
     type: 'non-member' as const,
     sales: customer.sales.map((sale) => ({
       id: sale.id,

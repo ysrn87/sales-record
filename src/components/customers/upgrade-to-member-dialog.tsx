@@ -14,7 +14,7 @@ interface UpgradeToMemberDialogProps {
     id: string;
     name: string;
     phone: string;
-    address: string;
+    address: string | null;
   };
 }
 
@@ -24,7 +24,7 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
   const [emailError, setEmailError] = useState('');
   const [name, setName] = useState(customer.name);
   const [phone, setPhone] = useState(customer.phone);
-  const [address, setAddress] = useState(customer.address);
+  const [address, setAddress] = useState(customer.address ?? '');
   const { toast } = useToast();
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +77,7 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(customer.name); setPhone(customer.phone); setAddress(customer.address); } }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(customer.name); setPhone(customer.phone); setAddress(customer.address ?? ''); } }}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" title="Upgrade to Member" className="group">
           <UserCog className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />

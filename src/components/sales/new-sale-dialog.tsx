@@ -41,7 +41,7 @@ interface NewSaleDialogProps {
     id: string;
     name: string;
     phone: string;
-    address: string;
+    address: string | null;
   }>;
   conversionRate?: number;
   trigger?: React.ReactNode;
@@ -114,7 +114,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
     }
   };
 
-  const handleQuickAddSuccess = (customer: { id: string; name: string; phone: string; address: string }) => {
+  const handleQuickAddSuccess = (customer: { id: string; name: string; phone: string; address: string | null }) => {
     setLocalNonMemberCustomers(prev => [customer, ...prev]);
     setNonMemberCustomerId(customer.id);
     setCustomerType('non-member');

@@ -34,7 +34,7 @@ interface NonMemberCustomer {
   id: string;
   name: string;
   phone: string;
-  address: string;
+  address: string | null;
   createdAt: Date;
   sales: Array<{ id: string; total: any }>;
   _count: { sales: number };
@@ -393,7 +393,7 @@ export function CustomerDetailsDialog({
               <div className="space-y-2.5">
                 {[
                   { icon: <Phone className="w-4 h-4 text-emerald-600" />, bg: 'bg-emerald-50', label: 'Telepon',          value: customer.phone },
-                  { icon: <MapPin className="w-4 h-4 text-rose-500"   />, bg: 'bg-rose-50',    label: 'Alamat',           value: customer.address as string },
+                  { icon: <MapPin className="w-4 h-4 text-rose-500"   />, bg: 'bg-rose-50',    label: 'Alamat',           value: customer.address ?? undefined },
                   { icon: <User   className="w-4 h-4 text-amber-600"  />, bg: 'bg-amber-50',   label: 'Pelanggan Sejak',  value: formatFullDate(customer.createdAt) },
                 ].filter(r => r.value).map(row => (
                   <div key={row.label} className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 hover:bg-gray-100 hover:text-gray-900 transition-colors">

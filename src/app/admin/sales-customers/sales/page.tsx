@@ -194,15 +194,11 @@ async function getCustomers() {
 }
 
 async function getNonMemberCustomers() {
-  return db.customer.findMany({
-    select: {
-      id: true,
-      name: true,
-      phone: true,
-      address: true,
-    },
+  const customers = await db.customer.findMany({
+    select: { id: true, name: true, phone: true, address: true },
     orderBy: { name: 'asc' },
   });
+  return customers.map((c) => ({ ...c, address: c.address ?? '' }));
 }
 
 export default async function AdminSalesPage({
