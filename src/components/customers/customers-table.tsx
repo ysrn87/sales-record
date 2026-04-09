@@ -248,8 +248,8 @@ export function CustomersTable({
                     <p className="text-sm font-bold text-[#028697]">{formatCurrency(totalSpent)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Transaksi</p>
-                    <p className="text-sm font-semibold text-gray-900">{customer._count.sales}x</p>
+                    <p className="text-xs text-gray-500 text-right pr-5">Transaksi</p>
+                    <p className="text-sm font-semibold text-gray-900 text-right pr-5">{customer._count.sales}x</p>
                   </div>
                 </div>
 

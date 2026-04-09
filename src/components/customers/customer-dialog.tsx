@@ -127,7 +127,7 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
               </>
             ) : (
               <>
-                <Pencil className="w-4 h-4" />
+                <Pencil className="w-4 h-4 text-white" />
               </>
             )}
           </Button>

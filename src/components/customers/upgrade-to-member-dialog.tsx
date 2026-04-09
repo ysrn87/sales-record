@@ -79,8 +79,8 @@ export function UpgradeToMemberDialog({ customer }: UpgradeToMemberDialogProps) 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setName(customer.name); setPhone(customer.phone); setAddress(customer.address); } }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" title="Upgrade to Member">
-          <UserCog className="w-4 h-4" />
+        <Button variant="ghost" size="sm" title="Upgrade to Member">
+          <UserCog className="w-4 h-4 text-white" />
         </Button>
       </DialogTrigger>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[500px]">
