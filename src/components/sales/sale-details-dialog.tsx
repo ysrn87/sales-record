@@ -290,12 +290,10 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
           .footer-left strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 2px; }
           .footer-right { font-size: 11px; color: var(--muted); text-align: right; }
 
-          /* ── PRINT BUTTON ── */
-          .print-btn-wrap { text-align: center; margin-top: 40px; }
-          .print-btn {
+          /* ── BUTTONS ── */
+          .print-btn-wrap { text-align: center; margin-top: 40px; display: flex; justify-content: center; gap: 12px; }
+          .print-btn, .back-btn {
             padding: 12px 40px;
-            background: var(--ink);
-            color: #fff;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -304,7 +302,10 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
             font-weight: 600;
             letter-spacing: 0.03em;
           }
+          .print-btn { background: var(--ink); color: #fff; }
           .print-btn:hover { opacity: 0.85; }
+          .back-btn { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+          .back-btn:hover { background: var(--line); }
 
           @media print {
             body { padding: 24px 32px; }
@@ -360,8 +361,8 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
             ${sale.items.map(item => `
               <tr>
                 <td>
-                  <div class="item-name">${item.variant.product.name}</div>
-                  <div class="item-meta">${item.variant.name} &nbsp;·&nbsp; ${item.variant.sku}</div>
+                  <div class="item-name">${item.variant.name}</div>
+                  <div class="item-meta">${item.variant.product.name} &nbsp;·&nbsp; ${item.variant.sku}</div>
                 </td>
                 <td class="r">${formatCurrency(item.price)}</td>
                 <td class="r">${item.quantity}</td>
@@ -421,11 +422,12 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
           </div>
           <div class="footer-right">
             Diinput oleh ${sale.cashier.name}<br>
-            Dicetak ${new Date().toLocaleString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            Dicetak pada ${new Date().toLocaleString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
 
         <div class="print-btn-wrap">
+          <button class="back-btn" onclick="window.close()">← Kembali</button>
           <button class="print-btn" onclick="window.print()">Cetak Invoice</button>
         </div>
 
@@ -528,7 +530,7 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                   <div key={item.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:justify-between gap-2">
                     <div className="flex-1">
                       <p className="font-medium text-sm sm:text-base">{item.variant.name}</p>
-                      <p className="text-xs sm:text-sm text-gray-600">{item.variant.product.name} • {item.variant.sku}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{item.variant.product.name} • SKU: {item.variant.sku}</p>
                       <p className="text-xs sm:text-sm text-gray-600">{item.quantity} × {formatCurrency(item.price)}</p>
                     </div>
                     <div className="text-left sm:text-right">
