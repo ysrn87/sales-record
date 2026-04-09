@@ -306,6 +306,7 @@ export function CustomerDetailsDialog({
               ) : (
                 <>
                   <NonMemberDialog
+                    mode="edit"
                     customer={{
                       id: customer.id, name: customer.name,
                       phone: customer.phone, address: customer.address as string,
