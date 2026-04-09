@@ -51,9 +51,9 @@ export function RecapTable({ rows }: RecapTableProps) {
         <TableHeader>
           <TableRow className='text-xs truncate'>
             <TableHead className="w-8">#</TableHead>
-            <TableHead>SKU</TableHead>
             <TableHead>Produk/Varian</TableHead>
             <TableHead className="text-right">Terjual</TableHead>
+            <TableHead>SKU</TableHead>
             <TableHead className="text-right">Harga (Avg.)</TableHead>
             <TableHead className="text-right">Pendapatan</TableHead>
             <TableHead className="text-right">Transaksi</TableHead>
@@ -66,11 +66,6 @@ export function RecapTable({ rows }: RecapTableProps) {
               <TableRow key={row.variantId} className='text-xs'>
                 <TableCell className="text-gray-400">
                   {index + 1}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="font-mono">
-                    {row.sku}
-                  </Badge>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-start gap-2">
@@ -91,6 +86,11 @@ export function RecapTable({ rows }: RecapTableProps) {
                 </TableCell>
                 <TableCell className="text-right font-semibold">
                   {row.totalQty.toLocaleString('id-ID')}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="font-mono">
+                    {row.sku}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right text-gray-600">
                   {formatRupiah(row.avgPrice)}
