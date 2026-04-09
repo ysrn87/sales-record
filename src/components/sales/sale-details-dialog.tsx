@@ -613,80 +613,94 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
 
         <div class="toast-msg" id="toastMsg"></div>
 
-        <script>
-          function showToast(msg) {
-            var t = document.getElementById('toastMsg');
-            t.textContent = msg;
-            t.classList.add('show');
-            setTimeout(function() { t.classList.remove('show'); }, 2800);
-          }
-
-          function setLoading(id, loading, originalText) {
-            var btn = document.getElementById(id);
-            btn.disabled = loading;
-            btn.textContent = loading ? 'Memproses...' : originalText;
-          }
-
-          function captureInvoice(mode) {
-            var btnId   = mode === 'share' ? 'shareBtn' : 'screenshotBtn';
-            var origTxt = mode === 'share' ? '📤 Bagikan' : '📸 Screenshot';
-            var wrap    = document.querySelector('.print-btn-wrap');
-            var toast   = document.getElementById('toastMsg');
-
-            setLoading(btnId, true, origTxt);
-            wrap.style.visibility  = 'hidden';
-            toast.style.visibility = 'hidden';
-
-            html2canvas(document.body, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff',
-              logging: false,
-            }).then(function(canvas) {
-              wrap.style.visibility  = '';
-              toast.style.visibility = '';
-              setLoading(btnId, false, origTxt);
-
-              canvas.toBlob(function(blob) {
-                var fileName = 'invoice-${sale.saleNumber}.png';
-                var file     = new File([blob], fileName, { type: 'image/png' });
-
-                if (mode === 'share' && navigator.canShare && navigator.canShare({ files: [file] })) {
-                  navigator.share({
-                    files: [file],
-                    title: 'Invoice ${sale.saleNumber}',
-                    text: 'Invoice ${sale.saleNumber} — ${customerName}',
-                  }).catch(function(err) {
-                    if (err.name !== 'AbortError') showToast('Gagal berbagi: ' + err.message);
-                  });
-                } else {
-                  // Fallback: download the image
-                  var url = URL.createObjectURL(blob);
-                  var a   = document.createElement('a');
-                  a.href     = url;
-                  a.download = fileName;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  if (mode === 'share') showToast('Share tidak didukung — gambar diunduh');
-                  else showToast('Screenshot tersimpan!');
-                }
-              }, 'image/png');
-            }).catch(function(err) {
-              wrap.style.visibility  = '';
-              toast.style.visibility = '';
-              setLoading(btnId, false, origTxt);
-              showToast('Gagal mengambil screenshot');
-              console.error(err);
-            });
-          }
-        </script>
-
       </body>
       </html>
     `;
 
     printWindow.document.write(invoiceHTML);
     printWindow.document.close();
+
+    // Inject script via DOM to avoid TSX parser issues with </script>
+    // and bypass Next.js CSP restrictions on inline scripts
+    const saleNumber = sale.saleNumber;
+    const custName   = customerName;
+
+    const injectScript = () => {
+      const s = printWindow.document.createElement('script');
+      s.textContent = `
+        function showToast(msg) {
+          var t = document.getElementById('toastMsg');
+          t.textContent = msg;
+          t.classList.add('show');
+          setTimeout(function() { t.classList.remove('show'); }, 2800);
+        }
+
+        function setLoading(id, loading, originalText) {
+          var btn = document.getElementById(id);
+          btn.disabled = loading;
+          btn.textContent = loading ? 'Memproses...' : originalText;
+        }
+
+        function captureInvoice(mode) {
+          var btnId   = mode === 'share' ? 'shareBtn' : 'screenshotBtn';
+          var origTxt = mode === 'share' ? '📤 Bagikan' : '📸 Screenshot';
+          var wrap    = document.querySelector('.print-btn-wrap');
+          var toast   = document.getElementById('toastMsg');
+
+          setLoading(btnId, true, origTxt);
+          wrap.style.visibility  = 'hidden';
+          toast.style.visibility = 'hidden';
+
+          html2canvas(document.body, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+          }).then(function(canvas) {
+            wrap.style.visibility  = '';
+            toast.style.visibility = '';
+            setLoading(btnId, false, origTxt);
+
+            canvas.toBlob(function(blob) {
+              var fileName = 'invoice-${saleNumber}.png';
+              var file     = new File([blob], fileName, { type: 'image/png' });
+
+              if (mode === 'share' && navigator.canShare && navigator.canShare({ files: [file] })) {
+                navigator.share({
+                  files: [file],
+                  title: 'Invoice ${saleNumber}',
+                  text: 'Invoice ${saleNumber} — ${custName}',
+                }).catch(function(err) {
+                  if (err.name !== 'AbortError') showToast('Gagal berbagi: ' + err.message);
+                });
+              } else {
+                var url = URL.createObjectURL(blob);
+                var a   = document.createElement('a');
+                a.href     = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+                if (mode === 'share') showToast('Share tidak didukung — gambar diunduh');
+                else showToast('Screenshot tersimpan!');
+              }
+            }, 'image/png');
+          }).catch(function(err) {
+            wrap.style.visibility  = '';
+            toast.style.visibility = '';
+            setLoading(btnId, false, origTxt);
+            showToast('Gagal mengambil screenshot');
+            console.error(err);
+          });
+        }
+      `;
+      printWindow.document.body.appendChild(s);
+    };
+
+    if (printWindow.document.readyState === 'complete') {
+      injectScript();
+    } else {
+      printWindow.addEventListener('load', injectScript);
+    }
   };
 
   return (
