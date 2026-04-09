@@ -44,9 +44,10 @@ interface NewSaleDialogProps {
     address: string;
   }>;
   conversionRate?: number;
+  trigger?: React.ReactNode;
 }
 
-export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], conversionRate = 1000 }: NewSaleDialogProps) {
+export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], conversionRate = 1000, trigger }: NewSaleDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<SaleItem[]>([]);
@@ -298,10 +299,12 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          Penjualan Baru
-        </Button>
+        {trigger || (
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            Penjualan Baru
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent

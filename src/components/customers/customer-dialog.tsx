@@ -119,7 +119,7 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant={mode === 'create' ? 'default' : 'ghost'} size={mode === 'create' ? 'default' : 'sm'}>
+          <Button variant={mode === 'create' ? 'default' : 'ghost'} size={mode === 'create' ? 'default' : 'sm'} className={mode === 'edit' ? 'group' : ''}>
             {mode === 'create' ? (
               <>
                 <Plus className="w-4 h-4 mr-2" />
@@ -127,7 +127,7 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
               </>
             ) : (
               <>
-                <Pencil className="w-4 h-4 text-white" />
+                <Pencil className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />
               </>
             )}
           </Button>

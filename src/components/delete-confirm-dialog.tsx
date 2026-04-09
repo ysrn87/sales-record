@@ -51,8 +51,8 @@ export function DeleteConfirmDialog({ title, description, onConfirm, trigger }: 
     <Dialog open={open} onOpenChange={setOpen}>
       <div onClick={() => setOpen(true)}>
         {trigger || (
-          <Button variant="ghost" size="sm">
-            <Trash2 className="w-4 h-4 text-red-600" />
+          <Button variant="ghost" size="sm" className="group">
+            <Trash2 className="w-4 h-4 text-rose-500 group-hover:text-rose-700 transition-colors" />
           </Button>
         )}
       </div>

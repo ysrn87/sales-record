@@ -62,8 +62,8 @@ export function NonMemberDialog({ customer }: NonMemberDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" title="Edit Pelanggan" className='hover:text-black'>
-          <Pencil className="w-4 h-4 text-white hover:text-black" />
+        <Button variant="ghost" size="sm" title="Edit Pelanggan" className="group">
+          <Pencil className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />
         </Button>
       </DialogTrigger>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[420px]">
