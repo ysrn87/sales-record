@@ -121,7 +121,6 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
         <title>Invoice ${sale.saleNumber}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         <style>
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -402,7 +401,7 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
 
           /* ── BUTTONS ── */
           .print-btn-wrap { text-align: center; margin-top: 32px; display: flex; justify-content: center; gap: 10px; }
-          .print-btn, .back-btn, .screenshot-btn, .share-btn {
+          .print-btn, .back-btn {
             padding: 10px 32px;
             border: none;
             border-radius: 6px;
@@ -411,26 +410,11 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
             font-family: 'Inter', sans-serif;
             font-weight: 600;
             letter-spacing: 0.01em;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
           }
           .print-btn { background: var(--ink); color: #fff; }
           .print-btn:hover { opacity: 0.85; }
           .back-btn { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
           .back-btn:hover { background: var(--line); }
-          .screenshot-btn { background: #f1f5f9; color: #0f172a; border: 1px solid var(--line); }
-          .screenshot-btn:hover { background: #e2e8f0; }
-          .share-btn { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-          .share-btn:hover { background: #dbeafe; }
-          .screenshot-btn:disabled, .share-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-          .toast-msg {
-            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-            background: #0f172a; color: #fff; padding: 8px 20px;
-            border-radius: 8px; font-size: 12px; font-weight: 500;
-            opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 9999;
-          }
-          .toast-msg.show { opacity: 1; }
 
           @media print {
             body { padding: 24px 32px; }
@@ -606,12 +590,8 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
 
         <div class="print-btn-wrap">
           <button class="back-btn" onclick="window.close()">← Kembali</button>
-          <button class="screenshot-btn" id="screenshotBtn" onclick="captureInvoice('download')">📸 Screenshot</button>
-          <button class="share-btn" id="shareBtn" onclick="captureInvoice('share')">📤 Bagikan</button>
           <button class="print-btn" onclick="window.print()">Cetak Invoice</button>
         </div>
-
-        <div class="toast-msg" id="toastMsg"></div>
 
       </body>
       </html>
@@ -619,88 +599,6 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
 
     printWindow.document.write(invoiceHTML);
     printWindow.document.close();
-
-    // Inject script via DOM to avoid TSX parser issues with </script>
-    // and bypass Next.js CSP restrictions on inline scripts
-    const saleNumber = sale.saleNumber;
-    const custName   = customerName;
-
-    const injectScript = () => {
-      const s = printWindow.document.createElement('script');
-      s.textContent = `
-        function showToast(msg) {
-          var t = document.getElementById('toastMsg');
-          t.textContent = msg;
-          t.classList.add('show');
-          setTimeout(function() { t.classList.remove('show'); }, 2800);
-        }
-
-        function setLoading(id, loading, originalText) {
-          var btn = document.getElementById(id);
-          btn.disabled = loading;
-          btn.textContent = loading ? 'Memproses...' : originalText;
-        }
-
-        function captureInvoice(mode) {
-          var btnId   = mode === 'share' ? 'shareBtn' : 'screenshotBtn';
-          var origTxt = mode === 'share' ? '📤 Bagikan' : '📸 Screenshot';
-          var wrap    = document.querySelector('.print-btn-wrap');
-          var toast   = document.getElementById('toastMsg');
-
-          setLoading(btnId, true, origTxt);
-          wrap.style.visibility  = 'hidden';
-          toast.style.visibility = 'hidden';
-
-          html2canvas(document.body, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false,
-          }).then(function(canvas) {
-            wrap.style.visibility  = '';
-            toast.style.visibility = '';
-            setLoading(btnId, false, origTxt);
-
-            canvas.toBlob(function(blob) {
-              var fileName = 'invoice-${saleNumber}.png';
-              var file     = new File([blob], fileName, { type: 'image/png' });
-
-              if (mode === 'share' && navigator.canShare && navigator.canShare({ files: [file] })) {
-                navigator.share({
-                  files: [file],
-                  title: 'Invoice ${saleNumber}',
-                  text: 'Invoice ${saleNumber} — ${custName}',
-                }).catch(function(err) {
-                  if (err.name !== 'AbortError') showToast('Gagal berbagi: ' + err.message);
-                });
-              } else {
-                var url = URL.createObjectURL(blob);
-                var a   = document.createElement('a');
-                a.href     = url;
-                a.download = fileName;
-                a.click();
-                URL.revokeObjectURL(url);
-                if (mode === 'share') showToast('Share tidak didukung — gambar diunduh');
-                else showToast('Screenshot tersimpan!');
-              }
-            }, 'image/png');
-          }).catch(function(err) {
-            wrap.style.visibility  = '';
-            toast.style.visibility = '';
-            setLoading(btnId, false, origTxt);
-            showToast('Gagal mengambil screenshot');
-            console.error(err);
-          });
-        }
-      `;
-      printWindow.document.body.appendChild(s);
-    };
-
-    if (printWindow.document.readyState === 'complete') {
-      injectScript();
-    } else {
-      printWindow.addEventListener('load', injectScript);
-    }
   };
 
   return (
