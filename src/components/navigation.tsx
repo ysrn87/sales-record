@@ -35,7 +35,7 @@ export function Navigation({ role, userName }: NavigationProps) {
       label: 'Penjualan & Pelanggan',
       mobileLabel: 'Penjualan',
       icon: <ShoppingCart className="w-4 h-4" />,
-      matchPaths: ['/admin/sales-customers/sales', '/admin/sales-customers/customers'],
+      matchPaths: ['/admin/sales-customers/sales', '/admin/sales-customers/customers', '/admin/sales-customers/recap'],
     },
     {
       href: '/admin/inventory/products',

@@ -49,12 +49,12 @@ export function RecapTable({ rows }: RecapTableProps) {
     <div className="rounded-md border overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className='text-xs truncate'>
             <TableHead className="w-8">#</TableHead>
             <TableHead>SKU</TableHead>
             <TableHead>Produk/Varian</TableHead>
             <TableHead className="text-right">Terjual</TableHead>
-            <TableHead className="text-right">Harga</TableHead>
+            <TableHead className="text-right">Harga (Avg.)</TableHead>
             <TableHead className="text-right">Pendapatan</TableHead>
             <TableHead className="text-right">Transaksi</TableHead>
           </TableRow>
@@ -68,7 +68,7 @@ export function RecapTable({ rows }: RecapTableProps) {
                   {index + 1}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="text-xs font-mono">
+                  <Badge variant="outline" className="font-mono">
                     {row.sku}
                   </Badge>
                 </TableCell>
@@ -77,16 +77,15 @@ export function RecapTable({ rows }: RecapTableProps) {
                     <div>
                       <div className="font-medium text-xs truncate">
                         {row.variantName}
+                      </div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1.5 truncate">
+                        {row.productName}
                         <span>
                           {isTop && (
                             <TrendingUp className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                           )}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 flex items-center gap-1.5 truncate">
-                        {row.productName}
-                      </div>
-
                     </div>
                   </div>
                 </TableCell>

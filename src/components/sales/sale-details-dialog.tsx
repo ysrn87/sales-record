@@ -69,143 +69,366 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    const statusLabel = sale.paymentStatus === 'PAID' ? 'Lunas' : sale.paymentStatus === 'PENDING' ? 'Pending' : 'Belum Lunas';
+    const statusColor = sale.paymentStatus === 'PAID' ? '#16a34a' : sale.paymentStatus === 'PENDING' ? '#d97706' : '#dc2626';
+    const statusBg   = sale.paymentStatus === 'PAID' ? '#f0fdf4' : sale.paymentStatus === 'PENDING' ? '#fffbeb' : '#fef2f2';
+
+    const customerName = sale.customer?.name ?? sale.nonMemberCustomer?.name ?? 'Pelanggan Umum';
+    const customerSub  = sale.customer
+      ? [sale.customer.email, sale.customer.phone, sale.customer.address].filter(Boolean).join(' · ')
+      : sale.nonMemberCustomer
+      ? [sale.nonMemberCustomer.phone, sale.nonMemberCustomer.address].filter(Boolean).join(' · ')
+      : '';
+
     const invoiceHTML = `
       <!DOCTYPE html>
-      <html>
+      <html lang="id">
       <head>
+        <meta charset="UTF-8" />
         <title>Invoice ${sale.saleNumber}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
         <style>
-          body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-          .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px; }
-          .header h1 { margin: 0; font-size: 28px; }
-          .header p { margin: 5px 0; color: #666; }
-          .details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-          .details-box { background: #f5f5f5; padding: 15px; border-radius: 5px; }
-          .details-box h3 { margin: 0 0 10px 0; font-size: 14px; color: #666; }
-          .details-box p { margin: 5px 0; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-          th { background: #f5f5f5; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; }
-          td { padding: 12px; border-bottom: 1px solid #ddd; }
-          .text-right { text-align: right; }
-          .totals { margin-left: auto; width: 300px; }
-          .totals-row { display: flex; justify-content: space-between; padding: 8px 0; }
-          .totals-row.total { font-size: 20px; font-weight: bold; border-top: 2px solid #000; padding-top: 12px; margin-top: 12px; }
-          .footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+          :root {
+            --ink:     #1a1a2e;
+            --muted:   #6b7280;
+            --line:    #e5e7eb;
+            --surface: #f9fafb;
+            --accent:  #1a1a2e;
+            --accent-light: #f0f0f5;
+          }
+
+          body {
+            font-family: 'DM Sans', sans-serif;
+            color: var(--ink);
+            background: #fff;
+            padding: 48px 56px;
+            max-width: 780px;
+            margin: 0 auto;
+            font-size: 13.5px;
+            line-height: 1.6;
+          }
+
+          /* ── HEADER ── */
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 32px;
+            border-bottom: 2px solid var(--ink);
+            margin-bottom: 36px;
+          }
+          .brand { display: flex; flex-direction: column; gap: 4px; }
+          .brand-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            letter-spacing: -0.5px;
+            line-height: 1;
+          }
+          .brand-sub { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+          .invoice-badge {
+            text-align: right;
+          }
+          .invoice-badge .word {
+            font-family: 'DM Serif Display', serif;
+            font-size: 36px;
+            letter-spacing: -1px;
+            line-height: 1;
+            color: var(--ink);
+          }
+          .invoice-badge .number {
+            font-size: 11.5px;
+            color: var(--muted);
+            margin-top: 4px;
+            letter-spacing: 0.04em;
+          }
+          .invoice-badge .inv-date {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 2px;
+          }
+
+          /* ── BILL-TO ── */
+          .party-box {
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 36px;
+          }
+          .party-label {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 10px;
+          }
+          .party-name { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+          .party-detail { color: var(--muted); font-size: 12px; }
+          .party-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+          }
+          .party-inline-item { font-size: 12px; color: var(--muted); }
+          .party-inline-item span { font-weight: 600; color: var(--ink); }
+          .party-divider {
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: var(--muted);
+            flex-shrink: 0;
+            opacity: 0.4;
+          }
+
+          .status-pill {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: ${statusBg};
+            color: ${statusColor};
+          }
+          .points-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 8px;
+            font-size: 12px;
+          }
+          .points-earned { color: #2563eb; }
+          .points-redeemed { color: #7c3aed; }
+
+          /* ── TABLE ── */
+          .section-title {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 12px;
+          }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+          thead tr { border-bottom: 2px solid var(--ink); }
+          th {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 10.5px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+          }
+          th.r, td.r { text-align: right; }
+          td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+          tbody tr:last-child td { border-bottom: none; }
+          .item-name { font-weight: 600; font-size: 13.5px; }
+          .item-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+
+          /* ── TOTALS ── */
+          .totals-wrap {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 36px;
+          }
+          .totals-box {
+            width: 280px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            overflow: hidden;
+          }
+          .totals-inner { padding: 0 18px; }
+          .totals-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--line);
+            font-size: 13px;
+          }
+          .totals-row:last-child { border-bottom: none; }
+          .totals-row .label { color: var(--muted); }
+          .totals-row.discount .val { color: #16a34a; }
+          .totals-row.points-disc .val { color: #7c3aed; }
+          .totals-row.ongkir .val { color: #d97706; }
+          .total-final {
+            background: var(--ink);
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 18px;
+            font-weight: 700;
+            font-size: 15px;
+          }
+
+          /* ── NOTES ── */
+          .notes-box {
+            border-left: 3px solid var(--ink);
+            padding: 12px 16px;
+            background: var(--surface);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 36px;
+            font-size: 12.5px;
+          }
+          .notes-box strong { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+          /* ── FOOTER ── */
+          .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+          }
+          .footer-left { font-size: 12px; color: var(--muted); }
+          .footer-left strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 2px; }
+          .footer-right { font-size: 11px; color: var(--muted); text-align: right; }
+
+          /* ── PRINT BUTTON ── */
+          .print-btn-wrap { text-align: center; margin-top: 40px; }
+          .print-btn {
+            padding: 12px 40px;
+            background: var(--ink);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+          }
+          .print-btn:hover { opacity: 0.85; }
+
           @media print {
-            body { padding: 20px; }
-            .no-print { display: none; }
+            body { padding: 24px 32px; }
+            .print-btn-wrap { display: none; }
           }
         </style>
       </head>
       <body>
+
+        <!-- Header -->
         <div class="header">
-          <h1>INVOICE</h1>
-          <p>Invoice Number: ${sale.saleNumber}</p>
-          <p>Date: ${formatDateTime(sale.createdAt)}</p>
-        </div>
-
-        <div class="details">
-          <div class="details-box">
-            <h3>BILL TO</h3>
-            ${sale.customer ? `
-              <p><strong>${sale.customer.name}</strong></p>
-              <p>${sale.customer.email}</p>
-              ${sale.customer.phone ? `<p>${sale.customer.phone}</p>` : ''}
-              ${sale.customer.address ? `<p>${sale.customer.address}</p>` : ''}
-            ` : sale.nonMemberCustomer ? `
-              <p><strong>${sale.nonMemberCustomer.name}</strong></p>
-              ${sale.nonMemberCustomer.phone ? `<p>${sale.nonMemberCustomer.phone}</p>` : ''}
-              ${sale.nonMemberCustomer.address ? `<p>${sale.nonMemberCustomer.address}</p>` : ''}
-            ` : `
-              <p><strong>Pelanggan Umum</strong></p>
-            `}
+          <div class="brand">
+            <div class="brand-name"><></div>
+            <div class="brand-sub">Official Invoice</div>
           </div>
-          <div class="details-box">
-            <h3>PAYMENT INFO</h3>
-            <p><strong>Method:</strong> ${sale.paymentMethod}</p>
-            <p><strong>Status:</strong> ${sale.paymentStatus === 'PAID' ? 'Lunas' : sale.paymentStatus === 'PENDING' ? 'Pending' : 'Belum Lunas'}</p>
-            <p><strong>Cashier:</strong> ${sale.cashier.name}</p>
-            ${sale.customer && sale.pointsEarned > 0 ? `<p><strong>Points Earned:</strong> ${sale.pointsEarned}</p>` : ''}
-            ${pointsRedeemed > 0 ? `<p style="color: purple;"><strong>Points Redeemed:</strong> ${pointsRedeemed} pts</p>` : ''}
+          <div class="invoice-badge">
+            <div class="word">Invoice</div>
+            <div class="number">${sale.saleNumber}</div>
+            <div class="inv-date">${formatDateTime(sale.createdAt)}</div>
           </div>
         </div>
 
+        <!-- Bill To -->
+        <div class="party-box">
+          <div class="party-label">Tagihan Kepada</div>
+          <div class="party-name">${customerName}</div>
+          ${customerSub ? `<div class="party-detail">${customerSub}</div>` : ''}
+          <div class="party-inline">
+            <div class="party-inline-item"><span>${sale.paymentMethod}</span></div>
+            <div class="party-divider"></div>
+            <div class="party-inline-item"><span class="status-pill">${statusLabel}</span></div>
+            ${sale.customer && sale.pointsEarned > 0 ? `
+            <div class="party-divider"></div>
+            <div class="party-inline-item points-earned">+${sale.pointsEarned} poin diperoleh</div>` : ''}
+            ${pointsRedeemed > 0 ? `
+            <div class="party-divider"></div>
+            <div class="party-inline-item points-redeemed">◆ ${pointsRedeemed} poin ditukarkan</div>` : ''}
+          </div>
+        </div>
+
+        <!-- Items table -->
+        <div class="section-title">Rincian Pesanan</div>
         <table>
           <thead>
             <tr>
               <th>Item</th>
-              <th class="text-right">Unit Price</th>
-              <th class="text-right">Quantity</th>
-              <th class="text-right">Total</th>
+              <th class="r">Harga Satuan</th>
+              <th class="r">Qty</th>
+              <th class="r">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             ${sale.items.map(item => `
               <tr>
                 <td>
-                  <strong>${item.variant.product.name}</strong><br>
-                  <small style="color: #666;">${item.variant.name} (${item.variant.sku})</small>
+                  <div class="item-name">${item.variant.product.name}</div>
+                  <div class="item-meta">${item.variant.name} &nbsp;·&nbsp; ${item.variant.sku}</div>
                 </td>
-                <td class="text-right">${formatCurrency(item.price)}</td>
-                <td class="text-right">${item.quantity}</td>
-                <td class="text-right">${formatCurrency(item.subtotal)}</td>
+                <td class="r">${formatCurrency(item.price)}</td>
+                <td class="r">${item.quantity}</td>
+                <td class="r" style="font-weight:600;">${formatCurrency(item.subtotal)}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
 
-        <div class="totals">
-          <div class="totals-row">
-            <span>Subtotal:</span>
-            <span>${formatCurrency(sale.subtotal)}</span>
-          </div>
-          ${sale.discount > 0 ? `
-            <div class="totals-row" style="color: green;">
-              <span>Discount:</span>
-              <span>-${formatCurrency(sale.discount)}</span>
+        <!-- Totals -->
+        <div class="totals-wrap">
+          <div class="totals-box">
+            <div class="totals-inner">
+              <div class="totals-row">
+                <span class="label">Subtotal</span>
+                <span class="val">${formatCurrency(sale.subtotal)}</span>
+              </div>
+              ${sale.discount > 0 ? `
+              <div class="totals-row discount">
+                <span class="label">Diskon</span>
+                <span class="val">− ${formatCurrency(sale.discount)}</span>
+              </div>` : ''}
+              ${pointsRedeemed > 0 ? `
+              <div class="totals-row points-disc">
+                <span class="label">Diskon Poin (${pointsRedeemed} pts)</span>
+                <span class="val">− ${formatCurrency(pointDiscount)}</span>
+              </div>` : ''}
+              ${sale.tax > 0 ? `
+              <div class="totals-row">
+                <span class="label">Pajak</span>
+                <span class="val">${formatCurrency(sale.tax)}</span>
+              </div>` : ''}
+              ${sale.ongkir > 0 ? `
+              <div class="totals-row ongkir">
+                <span class="label">Ongkir</span>
+                <span class="val">+ ${formatCurrency(sale.ongkir)}</span>
+              </div>` : ''}
             </div>
-          ` : ''}
-          ${pointsRedeemed > 0 ? `
-            <div class="totals-row" style="color: purple;">
-              <span>Discount (${pointsRedeemed} poin):</span>
-              <span>-${formatCurrency(pointDiscount)}</span>
+            <div class="total-final">
+              <span>Total</span>
+              <span>${formatCurrency(sale.total)}</span>
             </div>
-          ` : ''}
-          ${sale.tax > 0 ? `
-            <div class="totals-row">
-              <span>Tax:</span>
-              <span>${formatCurrency(sale.tax)}</span>
-            </div>
-          ` : ''}
-          ${sale.ongkir > 0 ? `
-            <div class="totals-row" style="color: orange;">
-              <span>Ongkir:</span>
-              <span>+${formatCurrency(sale.ongkir)}</span>
-            </div>
-          ` : ''}
-          <div class="totals-row total">
-            <span>TOTAL:</span>
-            <span>${formatCurrency(sale.total)}</span>
           </div>
         </div>
 
         ${sale.notes ? `
-          <div style="margin-top: 30px; padding: 15px; background: #f5f5f5; border-radius: 5px;">
-            <strong>Notes:</strong><br>
-            ${sale.notes}
-          </div>
-        ` : ''}
+        <div class="notes-box">
+          <strong>Catatan</strong>
+          ${sale.notes}
+        </div>` : ''}
 
+        <!-- Footer -->
         <div class="footer">
-          <p>Thank you for your business!</p>
-          <p>This is a computer-generated invoice.</p>
+          <div class="footer-left">
+            <strong>Terima kasih atas kepercayaan Anda!</strong>
+            Dokumen ini digenerate secara otomatis.
+          </div>
+          <div class="footer-right">
+            Diinput oleh ${sale.cashier.name}<br>
+            Dicetak ${new Date().toLocaleString('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </div>
         </div>
 
-        <div class="no-print" style="text-align: center; margin-top: 30px;">
-          <button onclick="window.print()" style="padding: 10px 30px; background: #000; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
-            Print Invoice
-          </button>
+        <div class="print-btn-wrap">
+          <button class="print-btn" onclick="window.print()">Cetak Invoice</button>
         </div>
+
       </body>
       </html>
     `;
@@ -304,8 +527,8 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                 {sale.items.map((item) => (
                   <div key={item.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:justify-between gap-2">
                     <div className="flex-1">
-                      <p className="font-medium text-sm sm:text-base">{item.variant.product.name}</p>
-                      <p className="text-xs sm:text-sm text-gray-600">{item.variant.name} • SKU: {item.variant.sku}</p>
+                      <p className="font-medium text-sm sm:text-base">{item.variant.name}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{item.variant.product.name} • {item.variant.sku}</p>
                       <p className="text-xs sm:text-sm text-gray-600">{item.quantity} × {formatCurrency(item.price)}</p>
                     </div>
                     <div className="text-left sm:text-right">

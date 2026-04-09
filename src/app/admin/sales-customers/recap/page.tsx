@@ -32,18 +32,29 @@ function getDateRange(period: string): { gte?: Date; lte?: Date } {
   }
 }
 
+// ─── Products list for filter ─────────────────────────────────────────────────
+
+async function getProducts() {
+  return db.product.findMany({
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true },
+  });
+}
+
 // ─── Data fetcher ────────────────────────────────────────────────────────────
 
 async function getRecapData(params: {
   search?: string;
   period?: string;
   paymentStatus?: string;
+  productId?: string;
   sort?: string;
 }) {
   const {
     search = '',
     period = 'month',
     paymentStatus = 'all',
+    productId = 'all',
     sort = 'qty_desc',
   } = params;
 
@@ -57,20 +68,22 @@ async function getRecapData(params: {
     saleWhere.paymentStatus = paymentStatus;
   }
 
+  const variantWhere: Record<string, unknown> = {};
+  if (productId !== 'all') {
+    variantWhere.productId = productId;
+  }
+  if (search) {
+    variantWhere.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { sku: { contains: search, mode: 'insensitive' } },
+      { product: { name: { contains: search, mode: 'insensitive' } } },
+    ];
+  }
+
   const items = await db.saleItem.findMany({
     where: {
       sale: saleWhere,
-      ...(search
-        ? {
-            variant: {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { sku: { contains: search, mode: 'insensitive' } },
-                { product: { name: { contains: search, mode: 'insensitive' } } },
-              ],
-            },
-          }
-        : {}),
+      ...(Object.keys(variantWhere).length > 0 ? { variant: variantWhere } : {}),
     },
     include: {
       variant: {
@@ -79,7 +92,6 @@ async function getRecapData(params: {
     },
   });
 
-  // Aggregate by variantId
   const map = new Map<string, RecapRow>();
 
   for (const item of items) {
@@ -109,31 +121,16 @@ async function getRecapData(params: {
 
   let rows = Array.from(map.values());
 
-  // Sort
   switch (sort) {
-    case 'qty_desc':
-      rows.sort((a, b) => b.totalQty - a.totalQty);
-      break;
-    case 'qty_asc':
-      rows.sort((a, b) => a.totalQty - b.totalQty);
-      break;
-    case 'revenue_desc':
-      rows.sort((a, b) => b.totalRevenue - a.totalRevenue);
-      break;
-    case 'revenue_asc':
-      rows.sort((a, b) => a.totalRevenue - b.totalRevenue);
-      break;
-    case 'name_asc':
-      rows.sort((a, b) => a.productName.localeCompare(b.productName));
-      break;
-    case 'name_desc':
-      rows.sort((a, b) => b.productName.localeCompare(a.productName));
-      break;
-    default:
-      rows.sort((a, b) => b.totalQty - a.totalQty);
+    case 'qty_desc':     rows.sort((a, b) => b.totalQty - a.totalQty); break;
+    case 'qty_asc':      rows.sort((a, b) => a.totalQty - b.totalQty); break;
+    case 'revenue_desc': rows.sort((a, b) => b.totalRevenue - a.totalRevenue); break;
+    case 'revenue_asc':  rows.sort((a, b) => a.totalRevenue - b.totalRevenue); break;
+    case 'name_asc':     rows.sort((a, b) => a.productName.localeCompare(b.productName)); break;
+    case 'name_desc':    rows.sort((a, b) => b.productName.localeCompare(a.productName)); break;
+    default:             rows.sort((a, b) => b.totalQty - a.totalQty);
   }
 
-  // Summary stats
   const totalRevenue = rows.reduce((s, r) => s + r.totalRevenue, 0);
   const totalQty = rows.reduce((s, r) => s + r.totalQty, 0);
   const totalTransactions = new Set(items.map((i) => i.saleId)).size;
@@ -151,13 +148,14 @@ export default async function AdminRecapPage({
     search?: string;
     period?: string;
     paymentStatus?: string;
+    productId?: string;
     sort?: string;
   }>;
 }) {
   const params = await searchParams;
 
-  const { rows, totalRevenue, totalQty, totalTransactions, topProduct } =
-    await getRecapData(params);
+  const [{ rows, totalRevenue, totalQty, totalTransactions, topProduct }, products] =
+    await Promise.all([getRecapData(params), getProducts()]);
 
   const formatRupiah = (n: number) =>
     new Intl.NumberFormat('id-ID', {
@@ -251,6 +249,15 @@ export default async function AdminRecapPage({
                   { value: 'last_month', label: 'Bulan Lalu' },
                   { value: 'year', label: 'Tahun Ini' },
                   { value: 'all', label: 'Semua Waktu' },
+                ],
+              },
+              {
+                key: 'productId',
+                label: 'Produk',
+                defaultValue: 'all',
+                options: [
+                  { value: 'all', label: 'Semua Produk' },
+                  ...products.map((p) => ({ value: p.id, label: p.name })),
                 ],
               },
               {
