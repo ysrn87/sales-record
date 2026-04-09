@@ -118,7 +118,7 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, varia
       <html lang="id">
       <head>
         <meta charset="UTF-8" />
-        <title>Invoice ${sale.saleNumber}</title>
+        <title>Invoice ${customerName} (${sale.saleNumber})</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <style>
