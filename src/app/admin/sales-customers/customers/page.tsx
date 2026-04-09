@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CustomersTable } from '@/components/customers/customers-table';
 import { CustomerDialog } from '@/components/customers/customer-dialog';
+import { NonMemberDialog } from '@/components/customers/non-member-dialog';
 import { SearchFilterBar } from '@/components/filters/search-filter-bar';
 
 async function getCustomers(params: {
@@ -179,18 +180,19 @@ export default async function AdminCustomersPage({
   return (
     <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
-        {/* Desktop button — hidden on mobile */}
-        <div className="hidden sm:block">
+        {/* Desktop buttons */}
+        <div className="hidden sm:flex gap-2">
+          <NonMemberDialog mode="create" />
           <CustomerDialog mode="create" />
         </div>
       </div>
 
-      {/* Mobile FAB */}
-      <div className="sm:hidden fixed bottom-20 right-6 z-50">
-        <CustomerDialog
+      {/* Mobile FAB — opens non-member dialog */}
+      <div className="sm:hidden fixed bottom-24 right-6 z-50">
+        <NonMemberDialog
           mode="create"
           trigger={
-            <button className="w-12 h-12 rounded-full bg-[#028697] text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all">
+            <button className="w-12 h-12 rounded-full bg-[#028697] text-white shadow-lg flex items-center justify-center hover:bg-[#028697]/90 active:scale-95 transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           }

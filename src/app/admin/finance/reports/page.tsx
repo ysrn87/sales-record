@@ -42,6 +42,7 @@ async function getSalesReport(page: number = 1, limit: number = 10) {
     subtotal: Number(sale.subtotal),
     discount: Number(sale.discount),
     tax: Number(sale.tax),
+    ongkir: Number(sale.ongkir),
     total: Number(sale.total),
     items: sale.items.map((item: typeof sale.items[number]) => ({
       ...item,

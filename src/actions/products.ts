@@ -263,3 +263,45 @@ export async function deleteVariantAction(id: string) {
     return { success: false, error: 'Failed to delete variant. Make sure it has no sales.' };
   }
 }
+
+export async function toggleProductActiveAction(id: string, isActive: boolean) {
+  try {
+    const session = await auth();
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    await db.product.update({
+      where: { id },
+      data: { isActive },
+    });
+
+    revalidatePath('/admin/inventory/products');
+    revalidatePath('/manager/inventory/products');
+    return { success: true };
+  } catch (error) {
+    console.error('Toggle product active error:', error);
+    return { success: false, error: 'Failed to update product status' };
+  }
+}
+
+export async function toggleVariantActiveAction(id: string, isActive: boolean) {
+  try {
+    const session = await auth();
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    await db.productVariant.update({
+      where: { id },
+      data: { isActive },
+    });
+
+    revalidatePath('/admin/inventory/products');
+    revalidatePath('/manager/inventory/products');
+    return { success: true };
+  } catch (error) {
+    console.error('Toggle variant active error:', error);
+    return { success: false, error: 'Failed to update variant status' };
+  }
+}

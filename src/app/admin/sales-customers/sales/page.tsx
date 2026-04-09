@@ -249,7 +249,7 @@ export default async function AdminSalesPage({
       </div>
 
       {/* Mobile FAB */}
-      <div className="sm:hidden fixed bottom-20 right-6 z-50">
+      <div className="sm:hidden fixed bottom-24 right-6 z-50">
         <NewSaleDialog
           variants={variants}
           customers={customers}

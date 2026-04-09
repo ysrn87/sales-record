@@ -179,8 +179,8 @@ export async function createCustomerAction(formData: FormData) {
     const email = normalizeEmail(rawEmail);
 
     // Validation
-    if (!name || !phone || !password) {
-      return { success: false, error: 'Name, phone, and password are required' };
+    if (!name || !phone || !password || !address) {
+      return { success: false, error: 'Nama, telepon, password, dan alamat wajib diisi' };
     }
 
     if (password.length < 6) {
@@ -262,8 +262,8 @@ export async function updateCustomerAction(id: string, formData: FormData) {
     const email = normalizeEmail(rawEmail);
 
     // Validation
-    if (!name || !phone) {
-      return { success: false, error: 'Name and phone are required' };
+    if (!name || !phone || !address) {
+      return { success: false, error: 'Nama, telepon, dan alamat wajib diisi' };
     }
 
     // Validate password length if provided

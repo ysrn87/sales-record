@@ -35,6 +35,7 @@ model Product {
   name        String
   description String?
   sku         String           @unique
+  isActive    Boolean          @default(true)
   createdById String
   updatedById String?
   createdAt   DateTime         @default(now())

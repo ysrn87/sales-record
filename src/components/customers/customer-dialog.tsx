@@ -113,7 +113,7 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
     setEmailError(val && !valid ? 'Masukkan alamat email yang valid' : '');
   };
 
-  const [address, setAddress] = useState('');
+  const [address, setAddress] = useState(mode === 'edit' ? (customer?.address || '') : '');
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -196,14 +196,16 @@ export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerD
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="address">Alamat</Label>
+              <Label htmlFor="address">Alamat <span className="text-red-500">*</span></Label>
               <Textarea
                 id="address"
                 name="address"
+                value={address}
                 defaultValue={customer?.address}
                 placeholder="Nama Jalan, Kota, Kode Pos"
                 onChange={(e) => setAddress(e.target.value)}
                 disabled={loading}
+                required
                 maxLength={150}
               />
             <p className="text-xs text-gray-500 text-right">

@@ -7,32 +7,43 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { updateNonMemberCustomerAction } from '@/actions/customers';
-import { Pencil } from 'lucide-react';
+import { createNonMemberCustomerAction, updateNonMemberCustomerAction } from '@/actions/customers';
+import { Pencil, Plus, UserPlus } from 'lucide-react';
 
-interface NonMemberDialogProps {
-  customer: {
-    id: string;
-    name: string;
-    phone: string;
-    address: string;
-  };
-}
+type CreateProps = {
+  mode: 'create';
+  customer?: never;
+  trigger?: React.ReactNode;
+};
 
-export function NonMemberDialog({ customer }: NonMemberDialogProps) {
+type EditProps = {
+  mode: 'edit';
+  customer: { id: string; name: string; phone: string; address: string };
+  trigger?: React.ReactNode;
+};
+
+type NonMemberDialogProps = CreateProps | EditProps;
+
+export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState(customer.name);
-  const [phone, setPhone] = useState(customer.phone);
-  const [address, setAddress] = useState(customer.address);
+  const [name, setName] = useState(mode === 'edit' ? customer.name : '');
+  const [phone, setPhone] = useState(mode === 'edit' ? customer.phone : '');
+  const [address, setAddress] = useState(mode === 'edit' ? customer.address : '');
   const { toast } = useToast();
 
   const handleOpenChange = (v: boolean) => {
     setOpen(v);
     if (!v) {
-      setName(customer.name);
-      setPhone(customer.phone);
-      setAddress(customer.address);
+      if (mode === 'edit') {
+        setName(customer.name);
+        setPhone(customer.phone);
+        setAddress(customer.address);
+      } else {
+        setName('');
+        setPhone('');
+        setAddress('');
+      }
     }
   };
 
@@ -45,12 +56,22 @@ export function NonMemberDialog({ customer }: NonMemberDialogProps) {
   const handleSubmit = async (formData: FormData) => {
     setLoading(true);
     try {
-      const result = await updateNonMemberCustomerAction(customer.id, formData);
+      const result =
+        mode === 'create'
+          ? await createNonMemberCustomerAction(formData)
+          : await updateNonMemberCustomerAction(customer.id, formData);
+
       if (result.success) {
-        toast({ title: 'Berhasil!', description: 'Data pelanggan berhasil diperbarui.' });
+        toast({
+          title: 'Berhasil!',
+          description:
+            mode === 'create'
+              ? 'Pelanggan berhasil ditambahkan.'
+              : 'Data pelanggan berhasil diperbarui.',
+        });
         setOpen(false);
       } else {
-        toast({ title: 'Error', description: result.error || 'Gagal memperbarui data.', variant: 'destructive' });
+        toast({ title: 'Error', description: result.error || 'Gagal menyimpan data.', variant: 'destructive' });
       }
     } catch {
       toast({ title: 'Error', description: 'Terjadi kesalahan.', variant: 'destructive' });
@@ -59,21 +80,33 @@ export function NonMemberDialog({ customer }: NonMemberDialogProps) {
     }
   };
 
+  const defaultTrigger =
+    mode === 'create' ? (
+      <Button>
+        <UserPlus className="w-4 h-4 mr-2" />
+        Tambah Non-Member
+      </Button>
+    ) : (
+      <Button variant="ghost" size="sm" title="Edit Pelanggan" className="group">
+        <Pencil className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />
+      </Button>
+    );
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" title="Edit Pelanggan" className="group">
-          <Pencil className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent aria-describedby={undefined} className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>Edit Pelanggan Non-Member</DialogTitle>
+          <DialogTitle>
+            {mode === 'create' ? 'Tambah Pelanggan' : 'Edit Pelanggan'}
+          </DialogTitle>
         </DialogHeader>
         <form action={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="nm-name">Nama <span className="text-red-500">*</span></Label>
+              <Label htmlFor="nm-name">
+                Nama <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="nm-name"
                 name="name"
@@ -82,11 +115,14 @@ export function NonMemberDialog({ customer }: NonMemberDialogProps) {
                 required
                 disabled={loading}
                 maxLength={80}
+                placeholder="Nama Lengkap"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="nm-phone">Telepon/WA <span className="text-red-500">*</span></Label>
+              <Label htmlFor="nm-phone">
+                Telepon/WA <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="nm-phone"
                 name="phone"
@@ -109,7 +145,9 @@ export function NonMemberDialog({ customer }: NonMemberDialogProps) {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="nm-address">Alamat <span className="text-red-500">*</span></Label>
+              <Label htmlFor="nm-address">
+                Alamat <span className="text-red-500">*</span>
+              </Label>
               <Textarea
                 id="nm-address"
                 name="address"
@@ -129,7 +167,7 @@ export function NonMemberDialog({ customer }: NonMemberDialogProps) {
               Batal
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Menyimpan...' : 'Simpan'}
+              {loading ? 'Menyimpan...' : mode === 'create' ? 'Tambah Pelanggan' : 'Simpan'}
             </Button>
           </DialogFooter>
         </form>
