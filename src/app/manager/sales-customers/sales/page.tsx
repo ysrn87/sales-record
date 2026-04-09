@@ -1,3 +1,4 @@
+import { auth } from '@/auth';
 import { db } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { NewSaleDialog } from '@/components/sales/new-sale-dialog';
@@ -199,12 +200,15 @@ export default async function AdminSalesPage({
   const payment = params.payment || 'all';
   const sort = params.sort || 'date_desc';
 
-  const [{ sales, total }, variants, customers, conversionRate] = await Promise.all([
+  const [{ sales, total }, variants, customers, conversionRate, session] = await Promise.all([
     getSales({ page, limit, search, payment, sort }),
     getVariants(),
     getCustomers(),
     getPointsConversionRate(),
+    auth(),
   ]);
+
+  const userRole = session?.user?.role ?? 'CASHIER';
 
   return (
     <div className="space-y-8">
@@ -266,6 +270,8 @@ export default async function AdminSalesPage({
             pageSize={limit}
             totalItems={total}
             conversionRate={conversionRate}
+            userRole={userRole}
+            variants={variants}
           />
         </CardContent>
       </Card>

@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { Printer, Pencil, Gift } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { Printer, Pencil, Gift, Trash2, AlertTriangle } from 'lucide-react';
 import { EditSaleDialog } from './edit-sale-dialog';
+import { deleteSaleAction } from '@/actions/sales';
 
 interface SaleDetailsDialogProps {
   sale: {
@@ -54,13 +56,44 @@ interface SaleDetailsDialogProps {
     }>;
   };
   conversionRate?: number;
+  userRole?: string;
+  variants?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    points: number;
+    product: { name: string };
+  }>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate?: () => void;
 }
 
-export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenChange, onUpdate }: SaleDetailsDialogProps) {
+export function SaleDetailsDialog({ sale, conversionRate = 1000, userRole, variants = [], open, onOpenChange, onUpdate }: SaleDetailsDialogProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { toast } = useToast();
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const result = await deleteSaleAction(sale.id);
+      if (result.success) {
+        toast({ title: 'Berhasil!', description: `${sale.saleNumber} berhasil dihapus.` });
+        onOpenChange(false);
+        if (onUpdate) onUpdate();
+      } else {
+        toast({ title: 'Error', description: result.error || 'Gagal menghapus penjualan.', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Terjadi kesalahan yang tidak terduga.', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
+  };
 
   const pointsRedeemed = sale.pointsRedeemed || 0;
   const pointDiscount = pointsRedeemed * conversionRate;
@@ -451,7 +484,7 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                   {sale.saleNumber} • {formatDateTime(sale.createdAt)}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" size="sm" onClick={handlePrint} className="flex-1 sm:flex-initial">
                   <Printer className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Print Invoice</span>
@@ -460,6 +493,38 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
                   <Pencil className="w-4 h-4 sm:mr-2" />
                   <span className="hidden sm:inline">Edit</span>
                 </Button>
+                {userRole === 'ADMINISTRATOR' && (
+                  confirmDelete ? (
+                    <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1">
+                      <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                      <span className="text-xs font-semibold text-red-700 whitespace-nowrap">Yakin hapus?</span>
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 rounded px-2 py-0.5 transition-colors"
+                      >
+                        {deleting ? 'Menghapus...' : 'Ya'}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(false)}
+                        disabled={deleting}
+                        className="text-xs font-semibold text-gray-500 hover:text-gray-700 disabled:opacity-50 transition-colors"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmDelete(true)}
+                      className="flex-1 sm:flex-initial border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                    >
+                      <Trash2 className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Hapus</span>
+                    </Button>
+                  )
+                )}
               </div>
             </div>
           </DialogHeader>
@@ -591,6 +656,8 @@ export function SaleDetailsDialog({ sale, conversionRate = 1000, open, onOpenCha
       {showEditDialog && (
         <EditSaleDialog
           sale={sale}
+          variants={variants}
+          userRole={userRole}
           conversionRate={conversionRate}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}

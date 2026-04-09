@@ -494,3 +494,104 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
     return { success: false, error: 'Failed to update sale' };
   }
 }
+export async function deleteSaleAction(id: string) {
+  try {
+    const session = await auth();
+    if (!session || session.user.role !== 'ADMINISTRATOR') {
+      return { success: false, error: 'Unauthorized - Admin access required' };
+    }
+
+    const sale = await db.sale.findUnique({
+      where: { id },
+      include: { items: true },
+    });
+
+    if (!sale) {
+      return { success: false, error: 'Sale not found' };
+    }
+
+    await db.$transaction(async (tx) => {
+      // 1. Restore stock for each item
+      for (const item of sale.items) {
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data: { stock: { increment: item.quantity } },
+        });
+
+        await tx.stockMovement.create({
+          data: {
+            variantId: item.variantId,
+            quantity: item.quantity,
+            type: 'IN',
+            notes: `Stok dikembalikan dari penghapusan ${sale.saleNumber}`,
+          },
+        });
+      }
+
+      // 2. Reverse customer points
+      if (sale.customerId) {
+        const pointsEarned = Number(sale.pointsEarned);
+        const pointsRedeemed = Number(sale.pointsRedeemed);
+
+        if (pointsEarned > 0) {
+          // Customer earned points on this sale — deduct them back
+          await tx.user.update({
+            where: { id: sale.customerId },
+            data: { points: { decrement: pointsEarned } },
+          });
+
+          await tx.pointHistory.create({
+            data: {
+              userId: sale.customerId,
+              points: -pointsEarned,
+              type: 'ADJUSTED',
+              description: `Poin dikembalikan dari penghapusan ${sale.saleNumber}`,
+            },
+          });
+        }
+
+        if (pointsRedeemed > 0) {
+          // Customer redeemed points on this sale — restore them back
+          await tx.user.update({
+            where: { id: sale.customerId },
+            data: { points: { increment: pointsRedeemed } },
+          });
+
+          await tx.pointHistory.create({
+            data: {
+              userId: sale.customerId,
+              points: pointsRedeemed,
+              type: 'ADJUSTED',
+              description: `Poin dikembalikan dari penghapusan ${sale.saleNumber}`,
+            },
+          });
+        }
+      }
+
+      // 3. Create cashflow reversal entry (audit trail)
+      await tx.cashflow.create({
+        data: {
+          type: 'EXPENSE',
+          category: 'Penghapusan Penjualan',
+          amount: Number(sale.total),
+          description: `Penghapusan ${sale.saleNumber}`,
+          date: new Date(),
+          createdById: session.user.id,
+        },
+      });
+
+      // 4. Delete the sale (SaleItems cascade-delete automatically)
+      await tx.sale.delete({ where: { id } });
+    });
+
+    revalidatePath('/admin/sales-customers/sales');
+    revalidatePath('/manager/sales-customers/sales');
+    revalidatePath('/admin/inventory/stock');
+    revalidatePath('/manager/inventory/stock');
+    revalidatePath('/admin/finance/cashflow');
+    return { success: true };
+  } catch (error) {
+    console.error('Delete sale error:', error);
+    return { success: false, error: 'Failed to delete sale' };
+  }
+}
