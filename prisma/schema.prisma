@@ -35,6 +35,7 @@ model Product {
   name        String
   description String?
   sku         String           @unique
+  type        ProductType      @default(READY_STOCK)
   isActive    Boolean          @default(true)
   createdById String
   updatedById String?
@@ -164,6 +165,11 @@ model Cashflow {
   createdBy   User            @relation(fields: [createdById], references: [id])
 
   @@map("cashflows")
+}
+
+enum ProductType {
+  READY_STOCK
+  PREORDER
 }
 
 enum Role {

@@ -37,6 +37,7 @@ interface ProductCardProps {
     description: string | null;
     sku: string;
     isActive: boolean;
+    type: string;
     variants: Variant[];
   };
   filterStatus: string;
@@ -44,6 +45,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, filterStatus }: ProductCardProps) {
   const [variantsOpen, setVariantsOpen] = useState(true);
+  const isPreorder = product.type === 'PREORDER';
 
   const activeCount = product.variants.filter((v) => v.isActive).length;
   const totalCount = product.variants.length;
@@ -57,6 +59,11 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-lg md:text-xl font-bold leading-tight">{product.name}</span>
+                {isPreorder && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                    Pre-Order
+                  </span>
+                )}
                 {!product.isActive && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                     Nonaktif
@@ -100,6 +107,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                 name: product.name,
                 description: product.description,
                 sku: product.sku,
+                type: product.type,
               }}
             />
             <ProductDeleteButton productId={product.id} />
@@ -124,7 +132,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
               )}
               Varian
             </Button>
-            <VariantDialog mode="create" productId={product.id} />
+            <VariantDialog mode="create" productId={product.id} isPreorder={isPreorder} />
           </div>
         )}
 
@@ -161,7 +169,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                     ? 'Belum ada varian tersedia'
                     : `No ${filterStatus} variants found`}
                 </p>
-                <VariantDialog mode="create" productId={product.id} />
+                <VariantDialog mode="create" productId={product.id} isPreorder={isPreorder} />
               </div>
             ) : (
               <>
@@ -173,7 +181,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                         <TableHead className="text-xs">SKU</TableHead>
                         <TableHead className="text-xs">Nama</TableHead>
                         <TableHead className="text-xs">Harga</TableHead>
-                        <TableHead className="text-xs">Stok</TableHead>
+                        {!isPreorder && <TableHead className="text-xs">Stok</TableHead>}
                         <TableHead className="text-xs">Aktif</TableHead>
                         <TableHead className="text-right text-xs">Actions</TableHead>
                       </TableRow>
@@ -187,20 +195,22 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                           <TableCell className="text-gray-500">{variant.sku}</TableCell>
                           <TableCell className="font-medium">{variant.name}</TableCell>
                           <TableCell>{formatCurrency(variant.price)}</TableCell>
-                          <TableCell>
-                            <span
-                              className={
-                                variant.stock <= variant.lowStock
-                                  ? 'text-red-600 font-semibold'
-                                  : ''
-                              }
-                            >
-                              {variant.stock}
-                              {variant.stock <= variant.lowStock && (
-                                <span className="ml-1 text-[10px] text-red-500">⚠</span>
-                              )}
-                            </span>
-                          </TableCell>
+                          {!isPreorder && (
+                            <TableCell>
+                              <span
+                                className={
+                                  variant.stock <= variant.lowStock
+                                    ? 'text-red-600 font-semibold'
+                                    : ''
+                                }
+                              >
+                                {variant.stock}
+                                {variant.stock <= variant.lowStock && (
+                                  <span className="ml-1 text-[10px] text-red-500">⚠</span>
+                                )}
+                              </span>
+                            </TableCell>
+                          )}
                           <TableCell>
                             <ActiveToggle
                               id={variant.id}
@@ -212,6 +222,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                             <div className="flex gap-2 justify-end">
                               <VariantDialog
                                 mode="edit"
+                                isPreorder={isPreorder}
                                 variant={{
                                   id: variant.id,
                                   name: variant.name,
@@ -265,27 +276,36 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                             {formatCurrency(variant.price)}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Stok</p>
-                          <p
-                            className={`text-sm font-semibold ${
-                              variant.stock <= variant.lowStock
-                                ? 'text-red-600'
-                                : 'text-gray-900'
-                            }`}
-                          >
-                            {variant.stock} unit
-                            {variant.stock <= variant.lowStock && (
-                              <span className="ml-1 text-[10px]">⚠</span>
-                            )}
-                          </p>
-                        </div>
+                        {!isPreorder && (
+                          <div>
+                            <p className="text-xs text-gray-500">Stok</p>
+                            <p
+                              className={`text-sm font-semibold ${
+                                variant.stock <= variant.lowStock
+                                  ? 'text-red-600'
+                                  : 'text-gray-900'
+                              }`}
+                            >
+                              {variant.stock} unit
+                              {variant.stock <= variant.lowStock && (
+                                <span className="ml-1 text-[10px]">⚠</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+                        {isPreorder && (
+                          <div>
+                            <p className="text-xs text-gray-500">Tipe</p>
+                            <p className="text-sm font-semibold text-amber-600">Pre Order</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Actions */}
                       <div className="flex gap-2 pt-2 border-t border-gray-200">
                         <VariantDialog
                           mode="edit"
+                          isPreorder={isPreorder}
                           variant={{
                             id: variant.id,
                             name: variant.name,

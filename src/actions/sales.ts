@@ -67,13 +67,14 @@ export async function createSaleAction(input: CreateSaleInput) {
     for (const item of items) {
       const variant = await db.productVariant.findUnique({
         where: { id: item.variantId },
+        include: { product: { select: { type: true } } },
       });
 
       if (!variant) {
         return { success: false, error: 'Product variant not found' };
       }
 
-      if (variant.stock < item.quantity) {
+      if (variant.product.type !== 'PREORDER' && variant.stock < item.quantity) {
         return { success: false, error: `Insufficient stock for ${variant.name}` };
       }
 
@@ -140,8 +141,15 @@ export async function createSaleAction(input: CreateSaleInput) {
         },
       });
 
-      // Update stock and create movements
+      // Update stock and create movements (READY_STOCK only)
       for (const item of items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          include: { product: { select: { type: true } } },
+        });
+
+        if (variant?.product.type === 'PREORDER') continue;
+
         await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stock: { decrement: item.quantity } },
@@ -317,6 +325,7 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
     for (const item of items) {
       const variant = await db.productVariant.findUnique({
         where: { id: item.variantId },
+        include: { product: { select: { type: true } } },
       });
 
       if (!variant) {
@@ -328,7 +337,7 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
       const originalQty = originalItem?.quantity || 0;
       const qtyDifference = item.quantity - originalQty;
 
-      if (qtyDifference > 0 && variant.stock < qtyDifference) {
+      if (variant.product.type !== 'PREORDER' && qtyDifference > 0 && variant.stock < qtyDifference) {
         return { success: false, error: `Insufficient stock for ${variant.name}` };
       }
 
@@ -346,8 +355,15 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
 
     // Update sale in transaction
     await db.$transaction(async (tx) => {
-      // Restore stock from original sale
+      // Restore stock from original sale (READY_STOCK only)
       for (const item of originalSale.items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          include: { product: { select: { type: true } } },
+        });
+
+        if (variant?.product.type === 'PREORDER') continue;
+
         await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stock: { increment: item.quantity } },
@@ -394,8 +410,15 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
         },
       });
 
-      // Deduct stock for new sale
+      // Deduct stock for new sale (READY_STOCK only)
       for (const item of items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          include: { product: { select: { type: true } } },
+        });
+
+        if (variant?.product.type === 'PREORDER') continue;
+
         await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stock: { decrement: item.quantity } },
@@ -511,8 +534,15 @@ export async function deleteSaleAction(id: string) {
     }
 
     await db.$transaction(async (tx) => {
-      // 1. Restore stock for each item
+      // 1. Restore stock for each item (READY_STOCK only)
       for (const item of sale.items) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          include: { product: { select: { type: true } } },
+        });
+
+        if (variant?.product.type === 'PREORDER') continue;
+
         await tx.productVariant.update({
           where: { id: item.variantId },
           data: { stock: { increment: item.quantity } },

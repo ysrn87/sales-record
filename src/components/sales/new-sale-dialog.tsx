@@ -28,8 +28,10 @@ interface NewSaleDialogProps {
     price: number;
     stock: number;
     points: number;
+    type?: string;
     product: {
       name: string;
+      type?: string;
     };
   }>;
   customers: Array<{
@@ -166,7 +168,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
     }
     const variant = variants.find(v => v.id === selectedVariantId);
     if (!variant) return;
-    if (quantity > variant.stock) {
+    if (variant.product.type !== 'PREORDER' && quantity > variant.stock) {
       toast({ title: 'Error', description: `Stok tersedia hanya ${variant.stock} unit.`, variant: 'destructive' });
       return;
     }
@@ -289,7 +291,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
     c.name.toLowerCase().includes(customerSearch.toLowerCase())
   );
   const filteredVariants = variants
-    .filter(v => v.stock > 0)
+    .filter(v => v.product.type === 'PREORDER' || v.stock > 0)
     .filter(v =>
       !productSearch ||
       v.product.name.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -521,6 +523,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                               <p className="text-xs text-gray-500 truncate leading-tight">{variant?.product.name}</p>
                               <div className="flex items-center gap-2 mt-2 flex-wrap">
                                 <span className="text-xs text-gray-400">{formatCurrency(item.price)}/pcs</span>
+                                {variant?.product.type === 'PREORDER' && (
+                                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">Pre-Order</span>
+                                )}
                                 {customerId && pointsToRedeem === 0 && itemPoints > 0 && (
                                   <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
                                     +{itemPoints} poin
@@ -566,9 +571,12 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">
                           {selectedVariant.product.name} — {selectedVariant.name}
+                          {selectedVariant.product.type === 'PREORDER' && (
+                            <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Pre-Order</span>
+                          )}
                         </p>
                         <p className="text-xs text-gray-400">
-                          {formatCurrency(selectedVariant.price)} · Stok: {selectedVariant.stock}
+                          {formatCurrency(selectedVariant.price)} · {selectedVariant.product.type === 'PREORDER' ? 'Pre Order' : `Stok: ${selectedVariant.stock}`}
                         </p>
                       </div>
                       <button
@@ -611,9 +619,12 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate">
                                 {variant.product.name} — {variant.name}
+                                {variant.product.type === 'PREORDER' && (
+                                  <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Pre-Order</span>
+                                )}
                               </p>
                               <p className="text-xs text-gray-400">
-                                {formatCurrency(variant.price)} · Stok: {variant.stock}
+                                {formatCurrency(variant.price)} · {variant.product.type === 'PREORDER' ? 'Pre Order' : `Stok: ${variant.stock}`}
                               </p>
                             </div>
                             {selectedVariantId === variant.id && (

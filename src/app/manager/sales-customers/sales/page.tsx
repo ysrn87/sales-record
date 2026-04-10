@@ -146,7 +146,10 @@ async function getVariants() {
   const variants = await db.productVariant.findMany({
     where: {
       isActive: true,
-      stock: { gt: 0 },
+      OR: [
+        { stock: { gt: 0 } },
+        { product: { type: 'PREORDER' } },
+      ],
     },
     include: {
       product: true,
@@ -166,6 +169,7 @@ async function getVariants() {
     points: v.points,
     product: {
       name: v.product.name,
+      type: v.product.type,
     },
   }));
 }

@@ -14,6 +14,7 @@ export async function createProductAction(formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const sku = formData.get('sku') as string;
+    const type = (formData.get('type') as string) || 'READY_STOCK';
 
     if (!name || !sku) {
       return { success: false, error: 'Name and SKU are required' };
@@ -33,6 +34,7 @@ export async function createProductAction(formData: FormData) {
         name,
         description: description || null,
         sku,
+        type: type as 'READY_STOCK' | 'PREORDER',
         createdById: session.user.id,
       },
     });
@@ -56,6 +58,7 @@ export async function updateProductAction(id: string, formData: FormData) {
     const name = formData.get('name') as string;
     const description = formData.get('description') as string;
     const sku = formData.get('sku') as string;
+    const type = (formData.get('type') as string) || 'READY_STOCK';
 
     if (!name || !sku) {
       return { success: false, error: 'Name and SKU are required' };
@@ -79,6 +82,7 @@ export async function updateProductAction(id: string, formData: FormData) {
         name,
         description: description || null,
         sku,
+        type: type as 'READY_STOCK' | 'PREORDER',
         updatedById: session.user.id,
       },
     });
@@ -154,8 +158,11 @@ export async function createVariantAction(formData: FormData) {
       },
     });
 
-    // Create stock movement and cashflow entry
-    if (stock > 0) {
+    // For READY_STOCK products: create stock movement and cashflow entry
+    const parentProduct = await db.product.findUnique({ where: { id: productId } });
+    const isPreorder = parentProduct?.type === 'PREORDER';
+
+    if (!isPreorder && stock > 0) {
       await db.stockMovement.create({
         data: {
           variantId: variant.id,
