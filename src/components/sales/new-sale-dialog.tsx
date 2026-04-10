@@ -190,6 +190,18 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
     setQuantityDisplay('1');
   };
 
+  const updateQuantity = (index: number, newQty: number) => {
+    if (newQty < 1) return;
+    const variant = variants.find(v => v.id === items[index].variantId);
+    if (!variant) return;
+    // Allow unlimited quantity for PREORDER products
+    if (variant.product.type === 'PREORDER' || newQty <= variant.stock) {
+      const newItems = [...items];
+      newItems[index].quantity = newQty;
+      setItems(newItems);
+    }
+  };
+
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
@@ -495,7 +507,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Keranjang</span>
                   </div>
                   {items.length > 0 && (
-                    <span className="text-[11px] font-bold text-[#028697] bg-[#028697]/[0.08] px-2.5 py-0.5 rounded-full border border-[#028697]/20">
+                    <span className="text-[11px] font-bold text-[#028697] bg-[#028697]/[0.08] px-2.5 py-0.5 rounded-full border border-blue-100">
                       {items.length} item · {items.reduce((sum, item) => sum + item.quantity, 0)} pcs
                     </span>
                   )}
@@ -509,46 +521,86 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                   </div>
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    <div className="grid grid-cols-[1fr,150px,auto] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                    {/* Table header */}
+                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Produk</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Qty</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right pr-8">Total</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</span>
                     </div>
 
-                    <div className="divide-y divide-gray-100 max-h-[220px] overflow-y-auto">
+                    {/* Item rows */}
+                    <div className="divide-y divide-gray-100 max-h-[300px] overflow-y-auto">
                       {items.map((item, index) => {
                         const variant = variants.find(v => v.id === item.variantId);
                         const itemPoints = (variant?.points ?? 0) * item.quantity;
                         return (
-                          <div key={index} className="grid grid-cols-[1fr,48px,auto] gap-2 items-center px-3 py-2.5 hover:bg-gray-50/70 transition-colors">
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate leading-tight">{variant?.name}</p>
-                              <p className="text-xs text-gray-500 truncate leading-tight">{variant?.product.name}</p>
-                              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                <span className="text-xs text-gray-400">{formatCurrency(item.price)}/pcs</span>
-                                {variant?.product.type === 'PREORDER' && (
-                                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">Pre-Order</span>
-                                )}
-                                {customerId && pointsToRedeem === 0 && itemPoints > 0 && (
-                                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-                                    +{itemPoints} poin
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <span className="text-xs font-semibold text-gray-700 text-center tabular-nums">{item.quantity}</span>
-                            <div className="flex items-center gap-1 justify-end">
-                              <span className="text-xs font-bold text-gray-900 tabular-nums whitespace-nowrap">
-                                {formatCurrency(item.price * item.quantity)}
-                              </span>
+                          <div key={index} className="px-3 py-3 hover:bg-gray-50/60 transition-colors space-y-0.5">
+
+                            {/* Row 1 — Variant name (left) · Delete icon (right) */}
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-gray-900 leading-snug break-words flex-1">
+                                {variant?.name}
+                              </p>
                               <button
                                 type="button"
                                 onClick={() => removeItem(index)}
-                                className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors ml-1"
+                                disabled={loading}
+                                className="w-6 h-6 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-30"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             </div>
+
+                            {/* Row 2 — Product name */}
+                            <p className="text-xs text-[#028697] leading-snug break-words">
+                              {variant?.product.name}
+                            </p>
+
+                            {/* Row 3 — Price & badges */}
+                            <div className="pt-0.5 flex items-center gap-2 flex-wrap">
+                              <p className="text-xs text-gray-400">{formatCurrency(item.price)}/pcs</p>
+                              {variant?.product.type === 'PREORDER' && (
+                                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">Pre-Order</span>
+                              )}
+                              {customerId && pointsToRedeem === 0 && itemPoints > 0 && (
+                                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                                  +{itemPoints} poin
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Row 4 — Qty stepper (left) · Row total (right) */}
+                            <div className="flex items-center justify-between gap-2 pt-1">
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(index, item.quantity - 1)}
+                                  disabled={loading || item.quantity <= 1}
+                                  className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </button>
+                                <span className="text-xs font-bold text-gray-800 w-7 text-center tabular-nums">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(index, item.quantity + 1)}
+                                  disabled={loading || (variant?.product.type !== 'PREORDER' && item.quantity >= (variant?.stock || 0))}
+                                  className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-30 transition-colors"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <span className="text-sm font-bold text-gray-900 tabular-nums whitespace-nowrap">
+                                {formatCurrency(item.price * item.quantity)}
+                              </span>
+                            </div>
+
+                            {/* Row 5 — Stock info */}
+                            <p className="text-[10px] text-gray-300 pt-0.5">
+                              {variant?.product.type === 'PREORDER' ? 'Pre Order' : `Stok: ${variant?.stock || 0} pcs`}
+                            </p>
+
                           </div>
                         );
                       })}
@@ -572,8 +624,8 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         <Package className="w-4 h-4 text-[#028697]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {selectedVariant.product.name} — {selectedVariant.name}
+                        <p className="text-xs font-semibold text-gray-900 truncate">
+                          {selectedVariant.name} — {selectedVariant.product.name}
                           {selectedVariant.product.type === 'PREORDER' && (
                             <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Pre-Order</span>
                           )}
@@ -620,8 +672,8 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                             className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${selectedVariantId === variant.id ? 'bg-[#028697]/[0.06]' : ''}`}
                           >
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {variant.product.name} — {variant.name}
+                              <p className="text-xs font-medium text-gray-900 truncate">
+                                {variant.name} — {variant.product.name} 
                                 {variant.product.type === 'PREORDER' && (
                                   <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Pre-Order</span>
                                 )}
