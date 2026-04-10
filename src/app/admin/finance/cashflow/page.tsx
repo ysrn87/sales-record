@@ -185,9 +185,9 @@ export default async function AdminCashflowPage({
           </CardContent>
         </Card>
       </div>
-      <div className={`text-xs md:text-sm font-medium ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+      {/* <div className={`text-xs md:text-sm font-medium ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
         <p>Bagi hasil system (10%) • {stats.balance >= 0 ? formatCurrency(stats.balance/10) : formatCurrency(0)}</p>
-      </div>
+      </div> */}
 
       {/* Transactions Table */}
       <Card>

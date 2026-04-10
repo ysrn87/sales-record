@@ -166,6 +166,59 @@ export default async function AdminRecapPage({
 
   return (
     <div className="space-y-6">
+      {/* Filter Bar — at top so it visually controls all cards and table */}
+      <Card>
+        <CardContent className="pt-4">
+          <SearchFilterBar
+            searchPlaceholder="Cari produk atau varian..."
+            filters={[
+              {
+                key: 'period',
+                label: 'Periode',
+                defaultValue: 'month',
+                options: [
+                  { value: 'today', label: 'Hari Ini' },
+                  { value: 'week', label: 'Minggu Ini' },
+                  { value: 'month', label: 'Bulan Ini' },
+                  { value: 'last_month', label: 'Bulan Lalu' },
+                  { value: 'year', label: 'Tahun Ini' },
+                  { value: 'all', label: 'Semua Waktu' },
+                ],
+              },
+              {
+                key: 'productId',
+                label: 'Produk',
+                defaultValue: 'all',
+                options: [
+                  { value: 'all', label: 'Semua Produk' },
+                  ...products.map((p) => ({ value: p.id, label: p.name })),
+                ],
+              },
+              {
+                key: 'paymentStatus',
+                label: 'Status Pembayaran',
+                defaultValue: 'all',
+                options: [
+                  { value: 'all', label: 'Semua Status' },
+                  { value: 'PAID', label: 'Lunas' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'UNPAID', label: 'Belum Lunas' },
+                ],
+              },
+            ]}
+            sortOptions={[
+              { value: 'qty_desc', label: 'Qty Terbanyak' },
+              { value: 'qty_asc', label: 'Qty Tersedikit' },
+              { value: 'revenue_desc', label: 'Pendapatan Tertinggi' },
+              { value: 'revenue_asc', label: 'Pendapatan Terendah' },
+              { value: 'name_asc', label: 'Nama A–Z' },
+              { value: 'name_desc', label: 'Nama Z–A' },
+            ]}
+            defaultSort="qty_desc"
+          />
+        </CardContent>
+      </Card>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card>
@@ -216,13 +269,16 @@ export default async function AdminRecapPage({
               <div className="p-2 bg-orange-100 rounded-lg">
                 <BarChart2 className="w-4 h-4 text-orange-600" />
               </div>
-              <div>
+              <div className='min-w-0'>
                 <p className="text-xs text-gray-500">Produk Terlaris</p>
-                <p className="font-bold text-sm truncate max-w-[100px]">
-                  {topProduct
-                    ? `${topProduct.productName} – ${topProduct.variantName}`
-                    : '–'}
-                </p>
+                {topProduct ? (
+                  <>
+                    <p className="font-bold text-xs truncate">{topProduct.variantName}</p>
+                    <p className="text-xs text-amber-500 truncate">{topProduct.productName} - {topProduct.sku}</p>
+                  </>
+                ) : (
+                  <p className="font-bold text-sm">–</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -234,56 +290,8 @@ export default async function AdminRecapPage({
         <CardHeader>
           <CardTitle className="text-lg md:text-xl">Rekap Penjualan per Varian</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <SearchFilterBar
-            searchPlaceholder="Cari produk atau varian..."
-            filters={[
-              {
-                key: 'period',
-                label: 'Periode',
-                defaultValue: 'month',
-                options: [
-                  { value: 'today', label: 'Hari Ini' },
-                  { value: 'week', label: 'Minggu Ini' },
-                  { value: 'month', label: 'Bulan Ini' },
-                  { value: 'last_month', label: 'Bulan Lalu' },
-                  { value: 'year', label: 'Tahun Ini' },
-                  { value: 'all', label: 'Semua Waktu' },
-                ],
-              },
-              {
-                key: 'productId',
-                label: 'Produk',
-                defaultValue: 'all',
-                options: [
-                  { value: 'all', label: 'Semua Produk' },
-                  ...products.map((p) => ({ value: p.id, label: p.name })),
-                ],
-              },
-              {
-                key: 'paymentStatus',
-                label: 'Status Pembayaran',
-                defaultValue: 'all',
-                options: [
-                  { value: 'all', label: 'Semua Status' },
-                  { value: 'PAID', label: 'Lunas' },
-                  { value: 'PENDING', label: 'Pending' },
-                  { value: 'UNPAID', label: 'Belum Lunas' },
-                ],
-              },
-            ]}
-            sortOptions={[
-              { value: 'qty_desc', label: 'Qty Terbanyak' },
-              { value: 'qty_asc', label: 'Qty Tersedikit' },
-              { value: 'revenue_desc', label: 'Pendapatan Tertinggi' },
-              { value: 'revenue_asc', label: 'Pendapatan Terendah' },
-              { value: 'name_asc', label: 'Nama A–Z' },
-              { value: 'name_desc', label: 'Nama Z–A' },
-            ]}
-            defaultSort="qty_desc"
-          />
-
-          <RecapTable rows={rows} />
+        <CardContent>
+          <RecapTable rows={rows} pageSize={15} />
         </CardContent>
       </Card>
     </div>

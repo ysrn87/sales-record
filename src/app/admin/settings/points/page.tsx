@@ -5,15 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  getAllSettings, 
+import {
+  getAllSettings,
   updatePointsConversionRate,
   updateMinPointsForRedemption,
   updateMaxPointsPerTransaction,
   initializeSettings,
 } from '@/actions/settings';
-import { Settings, Save, RefreshCw } from 'lucide-react';
+import { Coins, Save, RefreshCw, Info, ArrowRightLeft, ShieldAlert } from 'lucide-react';
 
 export default function PointsSettingsPage() {
   const [loading, setLoading] = useState(false);
@@ -21,7 +22,7 @@ export default function PointsSettingsPage() {
   const [conversionRate, setConversionRate] = useState('1000');
   const [minPoints, setMinPoints] = useState('10');
   const [maxPoints, setMaxPoints] = useState('1000');
-  
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,25 +45,13 @@ export default function PointsSettingsPage() {
     try {
       const rate = parseInt(conversionRate);
       if (isNaN(rate) || rate < 100 || rate > 10000) {
-        toast({
-          title: 'Invalid Value',
-          description: 'Conversion rate must be between 100 and 10,000',
-          variant: 'destructive',
-        });
+        toast({ title: 'Nilai tidak valid', description: 'Nilai tukar harus antara 100 dan 10.000', variant: 'destructive' });
         return;
       }
-
       await updatePointsConversionRate(rate);
-      toast({
-        title: 'Success!',
-        description: `Conversion rate updated to 1 point = Rp ${rate.toLocaleString('id-ID')}`,
-      });
+      toast({ title: 'Berhasil disimpan', description: `1 poin = Rp ${rate.toLocaleString('id-ID')}` });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update conversion rate',
-        variant: 'destructive',
-      });
+      toast({ title: 'Gagal', description: error.message || 'Gagal menyimpan nilai tukar', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -73,25 +62,13 @@ export default function PointsSettingsPage() {
     try {
       const min = parseInt(minPoints);
       if (isNaN(min) || min < 1 || min > 1000) {
-        toast({
-          title: 'Invalid Value',
-          description: 'Minimum points must be between 1 and 1,000',
-          variant: 'destructive',
-        });
+        toast({ title: 'Nilai tidak valid', description: 'Minimal poin harus antara 1 dan 1.000', variant: 'destructive' });
         return;
       }
-
       await updateMinPointsForRedemption(min);
-      toast({
-        title: 'Success!',
-        description: `Minimum points updated to ${min}`,
-      });
+      toast({ title: 'Berhasil disimpan', description: `Minimal penukaran: ${min} poin` });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update minimum points',
-        variant: 'destructive',
-      });
+      toast({ title: 'Gagal', description: error.message || 'Gagal menyimpan minimal poin', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -102,25 +79,13 @@ export default function PointsSettingsPage() {
     try {
       const max = parseInt(maxPoints);
       if (isNaN(max) || max < 10) {
-        toast({
-          title: 'Invalid Value',
-          description: 'Maximum points must be at least 10',
-          variant: 'destructive',
-        });
+        toast({ title: 'Nilai tidak valid', description: 'Maksimal poin harus minimal 10', variant: 'destructive' });
         return;
       }
-
       await updateMaxPointsPerTransaction(max);
-      toast({
-        title: 'Success!',
-        description: `Maximum points updated to ${max}`,
-      });
+      toast({ title: 'Berhasil disimpan', description: `Maksimal penukaran: ${max} poin per transaksi` });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update maximum points',
-        variant: 'destructive',
-      });
+      toast({ title: 'Gagal', description: error.message || 'Gagal menyimpan maksimal poin', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -131,191 +96,168 @@ export default function PointsSettingsPage() {
     try {
       await initializeSettings();
       await loadSettings();
-      toast({
-        title: 'Success!',
-        description: 'Settings initialized with default values',
-      });
+      toast({ title: 'Berhasil', description: 'Pengaturan direset ke nilai default' });
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to initialize settings',
-        variant: 'destructive',
-      });
+      toast({ title: 'Gagal', description: error.message || 'Gagal mereset pengaturan', variant: 'destructive' });
     } finally {
       setInitializing(false);
     }
   }
 
+  const redeemable = Math.min(100, parseInt(maxPoints) || 0);
+  const maxDiscount = redeemable * (parseInt(conversionRate) || 0);
+
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6">
-        {/* Conversion Rate */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Nilai Tukar Poin
-            </CardTitle>
-            <CardDescription>
-              Tentukan rasio nilai satuan poin
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="conversionRate">1 Point = Rp</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="conversionRate"
-                  type="number"
-                  min="100"
-                  max="10000"
-                  step="100"
-                  value={conversionRate}
-                  onChange={(e) => setConversionRate(e.target.value)}
-                  placeholder="1000"
-                  className="max-w-xs"
-                />
-                <Button onClick={handleSaveConversionRate} disabled={loading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">
-                Current: Rp {parseInt(conversionRate).toLocaleString('id-ID')} = 1 point
+    <div className="space-y-6 max-w-2xl">
+
+      {/* Settings Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Coins className="w-5 h-5 text-[#028697]" />
+            Pengaturan Poin
+          </CardTitle>
+          <CardDescription>Atur aturan penukaran poin untuk member</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+
+          {/* Conversion Rate */}
+          <div className="space-y-2">
+            <Label htmlFor="conversionRate" className="text-sm font-medium">Nilai Tukar Poin</Label>
+            <p className="text-xs text-gray-500">Jumlah rupiah yang didapat dari 1 poin</p>
+            <div className="flex gap-2 items-center">
+              <span className="text-sm text-gray-500 shrink-0">1 poin =  Rp</span>
+              <Input
+                id="conversionRate"
+                type="number"
+                min="100"
+                max="10000"
+                step="100"
+                value={conversionRate}
+                onChange={(e) => setConversionRate(e.target.value)}
+                placeholder="1000"
+                className="max-w-[140px]"
+              />
+              <Button size="sm" onClick={handleSaveConversionRate} disabled={loading} className="bg-[#028697] hover:bg-[#17a8bb]">
+                <Save className="w-3.5 h-3.5 mr-1.5" />
+                Simpan
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Min Points */}
+          <div className="space-y-2">
+            <Label htmlFor="minPoints" className="text-sm font-medium">Minimal Penukaran</Label>
+            <p className="text-xs text-gray-500">Jumlah poin terkecil yang bisa ditukarkan</p>
+            <div className="flex gap-2 items-center">
+              <Input
+                id="minPoints"
+                type="number"
+                min="1"
+                max="1000"
+                value={minPoints}
+                onChange={(e) => setMinPoints(e.target.value)}
+                placeholder="10"
+                className="max-w-[140px]"
+              />
+              <span className="text-sm text-gray-500">poin</span>
+              <Button size="sm" onClick={handleSaveMinPoints} disabled={loading} className="bg-[#028697] hover:bg-[#17a8bb]">
+                <Save className="w-3.5 h-3.5 mr-1.5" />
+                Simpan
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Max Points */}
+          <div className="space-y-2">
+            <Label htmlFor="maxPoints" className="text-sm font-medium">Maksimal Penukaran per Transaksi</Label>
+            <p className="text-xs text-gray-500">Batas poin yang bisa ditukarkan dalam satu transaksi</p>
+            <div className="flex gap-2 items-center">
+              <Input
+                id="maxPoints"
+                type="number"
+                min="10"
+                value={maxPoints}
+                onChange={(e) => setMaxPoints(e.target.value)}
+                placeholder="1000"
+                className="max-w-[140px]"
+              />
+              <span className="text-sm text-gray-500">poin</span>
+              <Button size="sm" onClick={handleSaveMaxPoints} disabled={loading} className="bg-[#028697] hover:bg-[#17a8bb]">
+                <Save className="w-3.5 h-3.5 mr-1.5" />
+                Simpan
+              </Button>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
+
+      {/* Simulasi */}
+      <Card className="bg-gradient-to-br from-[#e0f9fc] to-[#f0fdfe] border-[#1ecbe1]/30">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ArrowRightLeft className="w-5 h-5 text-[#028697]" />
+            Simulasi Penukaran
+          </CardTitle>
+          <CardDescription>Contoh untuk member dengan 100 poin</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Poin Dimiliki</p>
+              <p className="text-2xl font-bold text-gray-800">100</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Bisa Ditukar</p>
+              <p className="text-2xl font-bold text-[#028697]">{redeemable}</p>
+              <p className="text-xs text-gray-400">poin</p>
+            </div>
+            <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Maks. Diskon</p>
+              <p className="text-lg font-bold text-emerald-600">
+                Rp {maxDiscount.toLocaleString('id-ID')}
               </p>
             </div>
+          </div>
+          <div className="flex items-start gap-2 mt-4 text-xs text-[#028697]/80">
+            <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>
+              Batas penukaran dibatasi oleh <strong>maksimal {maxPoints} poin</strong> per transaksi.
+              Sisa poin dapat digunakan di transaksi berikutnya.
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-900 mb-2">Contoh:</h4>
-              <p className="text-sm text-blue-700">
-                Jika member memiliki <strong>10 points</strong> maka dapat ditukar diskon
-                <strong> Rp {(parseInt(conversionRate) * 10).toLocaleString('id-ID')}</strong> 
-                , atau dengan produk senilai
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Reset */}
+      <Card className="border-orange-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base text-orange-700">
+            <ShieldAlert className="w-5 h-5" />
+            Reset ke Default
+          </CardTitle>
+          <CardDescription>
+            Kembalikan semua pengaturan poin ke nilai bawaan sistem
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={handleInitialize}
+            disabled={initializing}
+            className="border-orange-300 text-orange-700 hover:bg-orange-50"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${initializing ? 'animate-spin' : ''}`} />
+            {initializing ? 'Mereset...' : 'Reset Pengaturan'}
+          </Button>
+        </CardContent>
+      </Card>
 
-        {/* Minimum Points */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Minimal Penukaran Poin</CardTitle>
-            <CardDescription>
-              Jumlah poin terendah yang dibutuhkan untuk penukaran hadiah
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="minPoints">Minimum Poin</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="minPoints"
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={minPoints}
-                  onChange={(e) => setMinPoints(e.target.value)}
-                  placeholder="10"
-                  className="max-w-xs"
-                />
-                <Button onClick={handleSaveMinPoints} disabled={loading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">
-                Member butuh minimal {minPoints} poin to ditukar
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Maximum Points */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Maximum Poin Per Transaksi</CardTitle>
-            <CardDescription>
-              Poin maksimal yang dapat ditukar dalam satu transaksi
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="maxPoints">Maximum Poin</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="maxPoints"
-                  type="number"
-                  min="10"
-                  value={maxPoints}
-                  onChange={(e) => setMaxPoints(e.target.value)}
-                  placeholder="1000"
-                  className="max-w-xs"
-                />
-                <Button onClick={handleSaveMaxPoints} disabled={loading}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500">
-                Member dapat menukar sebanyak {maxPoints} poin per transaction
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Impact Calculator */}
-        <Card className="bg-gradient-to-r from-purple-50 to-pink-50">
-          <CardHeader>
-            <CardTitle>Impact Calculator</CardTitle>
-            <CardDescription>See how your settings affect customers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-600">Customer Points</p>
-                  <p className="text-2xl font-bold">100</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Can Redeem</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {Math.min(100, parseInt(maxPoints))}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Max Discount</p>
-                  <p className="text-2xl font-bold text-purple-600">
-                    Rp {(Math.min(100, parseInt(maxPoints)) * parseInt(conversionRate)).toLocaleString('id-ID')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Initialize Settings */}
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-900">
-              <RefreshCw className="w-5 h-5" />
-              Reset to Default
-            </CardTitle>
-            <CardDescription className="text-orange-700">
-              Reset all points settings to default values
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              variant="outline" 
-              onClick={handleInitialize} 
-              disabled={initializing}
-              className="border-orange-300 text-orange-700 hover:bg-orange-100"
-            >
-              {initializing ? 'Initializing...' : 'Initialize Default Settings'}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

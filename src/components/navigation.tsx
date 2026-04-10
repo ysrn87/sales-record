@@ -31,18 +31,18 @@ export function Navigation({ role, userName }: NavigationProps) {
   const adminNavItems: NavItem[] = [
     { href: '/admin', label: 'Dashboard', mobileLabel: 'Dashboard', icon: <Home className="w-4 h-4" /> },
     {
-      href: '/admin/sales-customers/sales',
-      label: 'Penjualan & Pelanggan',
-      mobileLabel: 'Penjualan',
-      icon: <ShoppingCart className="w-4 h-4" />,
-      matchPaths: ['/admin/sales-customers/sales', '/admin/sales-customers/customers', '/admin/sales-customers/recap'],
-    },
-    {
       href: '/admin/inventory/products',
       label: 'Inventori',
       mobileLabel: 'Inventori',
       icon: <Package className="w-4 h-4" />,
       matchPaths: ['/admin/inventory/products', '/admin/inventory/stock', '/admin/inventory/reports'],
+    },
+    {
+      href: '/admin/sales-customers/sales',
+      label: 'Penjualan & Pelanggan',
+      mobileLabel: 'Penjualan',
+      icon: <ShoppingCart className="w-4 h-4" />,
+      matchPaths: ['/admin/sales-customers/sales', '/admin/sales-customers/customers', '/admin/sales-customers/recap'],
     },
     {
       href: '/admin/finance/cashflow',
