@@ -1,96 +1,99 @@
 import { db } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, ShoppingCart, Award } from 'lucide-react';
 import { CustomersTable } from '@/components/customers/customers-table';
+import { CustomerDialog } from '@/components/customers/customer-dialog';
+import { NonMemberDialog } from '@/components/customers/non-member-dialog';
+import { SearchFilterBar } from '@/components/filters/search-filter-bar';
 
-async function getCustomerStats() {
-  const [totalMembers, totalNonMembers, totalPurchases, totalPoints] = await Promise.all([
-    db.user.count({
-      where: { role: 'MEMBER' },
-    }),
-    db.customer.count(),
-    db.sale.count(),
-    db.user.aggregate({
-      _sum: { points: true },
-      where: { role: 'MEMBER' },
-    }),
-  ]);
+async function getCustomers(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  points?: string;
+  sort?: string;
+}) {
+  const {
+    page = 1,
+    limit = 10,
+    search = '',
+    points = 'all',
+    sort = 'name_asc',
+  } = params;
 
-  return {
-    totalCustomers: totalMembers + totalNonMembers,
-    totalPurchases,
-    totalPoints: totalPoints._sum.points || 0,
-  };
-}
-
-async function getAllCustomers(page: number = 1, limit: number = 10) {
   const skip = (page - 1) * limit;
-  
-  // Fetch both members and non-members
+
+  // Build where clause for members
+  const memberWhere: any = { role: 'MEMBER' };
+
+  if (search) {
+    memberWhere.OR = [
+      { name: { contains: search, mode: 'insensitive' as const } },
+      { phone: { contains: search, mode: 'insensitive' as const } },
+      { email: { contains: search, mode: 'insensitive' as const } },
+    ];
+  }
+
+  if (points !== 'all') {
+    switch (points) {
+      case 'low':    memberWhere.points = { lt: 100 }; break;
+      case 'medium': memberWhere.points = { gte: 100, lt: 500 }; break;
+      case 'high':   memberWhere.points = { gte: 500 }; break;
+    }
+  }
+
+  // Build where clause for non-members
+  const nonMemberWhere: any = {};
+  if (search) {
+    nonMemberWhere.OR = [
+      { name: { contains: search, mode: 'insensitive' as const } },
+      { phone: { contains: search, mode: 'insensitive' as const } },
+      { address: { contains: search, mode: 'insensitive' as const } },
+    ];
+  }
+
   const [members, nonMembers] = await Promise.all([
     db.user.findMany({
-      where: { role: 'MEMBER' },
-      orderBy: { createdAt: 'desc' },
+      where: memberWhere,
       include: {
-        sales: {
-          select: {
-            id: true,
-            total: true,
-          },
-        },
-        _count: {
-          select: {
-            sales: true,
-          },
-        },
+        sales: { select: { id: true, total: true } },
+        _count: { select: { sales: true } },
       },
     }),
     db.customer.findMany({
-      orderBy: { createdAt: 'desc' },
+      where: nonMemberWhere,
       include: {
-        sales: {
-          select: {
-            id: true,
-            total: true,
-          },
-        },
-        _count: {
-          select: {
-            sales: true,
-          },
-        },
+        sales: { select: { id: true, total: true } },
+        _count: { select: { sales: true } },
       },
     }),
   ]);
 
-  // Convert and add type field
   const serializedMembers = members.map((customer) => ({
     ...customer,
     type: 'member' as const,
-    sales: customer.sales.map((sale) => ({
-      id: sale.id,
-      total: Number(sale.total),
-    })),
+    sales: customer.sales.map((sale) => ({ id: sale.id, total: Number(sale.total) })),
   }));
 
   const serializedNonMembers = nonMembers.map((customer) => ({
     ...customer,
     address: customer.address ?? '',
     type: 'non-member' as const,
-    sales: customer.sales.map((sale) => ({
-      id: sale.id,
-      total: Number(sale.total),
-    })),
+    sales: customer.sales.map((sale) => ({ id: sale.id, total: Number(sale.total) })),
   }));
 
-  // Combine both types and sort by creation date
-  const allCustomers = [...serializedMembers, ...serializedNonMembers].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  let allCustomers = [...serializedMembers, ...serializedNonMembers];
+
+  switch (sort) {
+    case 'name_asc':    allCustomers.sort((a, b) => a.name.localeCompare(b.name)); break;
+    case 'name_desc':   allCustomers.sort((a, b) => b.name.localeCompare(a.name)); break;
+    case 'points_asc':  allCustomers.sort((a, b) => (a.type === 'member' ? a.points : 0) - (b.type === 'member' ? b.points : 0)); break;
+    case 'points_desc': allCustomers.sort((a, b) => (b.type === 'member' ? b.points : 0) - (a.type === 'member' ? a.points : 0)); break;
+    case 'joined_asc':  allCustomers.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); break;
+    case 'joined_desc': allCustomers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()); break;
+    default:            allCustomers.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   const total = allCustomers.length;
-  
-  // Apply pagination
   const paginatedCustomers = allCustomers.slice(skip, skip + limit);
 
   return { customers: paginatedCustomers, total };
@@ -99,69 +102,79 @@ async function getAllCustomers(page: number = 1, limit: number = 10) {
 export default async function ManagerCustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; limit?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    limit?: string;
+    search?: string;
+    points?: string;
+    sort?: string;
+  }>;
 }) {
   const params = await searchParams;
-  const page = Number(params.page) || 1;
-  const limit = Number(params.limit) || 10;
+  const page   = Number(params.page)  || 1;
+  const limit  = Number(params.limit) || 10;
+  const search = params.search || '';
+  const points = params.points || 'all';
+  const sort   = params.sort   || 'name_asc';
 
-  const stats = await getCustomerStats();
-  const { customers, total } = await getAllCustomers(page, limit);
+  const { customers, total } = await getCustomers({ page, limit, search, points, sort });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Kelola Pelanggan</h1>
-          <p className="text-gray-600">Lihat akun dan aktifitas pelanggan</p>
+        {/* Desktop buttons */}
+        <div className="hidden sm:flex gap-2">
+          <NonMemberDialog mode="create" />
+          <CustomerDialog mode="create" />
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pelanggan</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-            <p className="text-xs text-muted-foreground">Member terdaftar</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pembelian</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPurchases}</div>
-            <p className="text-xs text-muted-foreground">Semua transaksi</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Akumulasi Poin</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPoints}</div>
-            <p className="text-xs text-muted-foreground">Loyalty points</p>
-          </CardContent>
-        </Card>
+      {/* Mobile FAB — opens non-member dialog */}
+      <div className="sm:hidden fixed bottom-24 right-6 z-50">
+        <NonMemberDialog
+          mode="create"
+          trigger={
+            <button className="w-12 h-12 rounded-full bg-[#028697] text-white shadow-lg flex items-center justify-center hover:bg-[#028697]/90 active:scale-95 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          }
+        />
       </div>
 
-      {/* All Customers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Semua Pelanggan</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Daftar Pelanggan</CardTitle>
         </CardHeader>
-        <CardContent>
-          <CustomersTable 
-            customers={customers} 
-            showActions={false}
+        <CardContent className="space-y-4">
+          <SearchFilterBar
+            searchPlaceholder="Cari berdasarkan nama, telepon, atau email..."
+            filters={[
+              {
+                key: 'points',
+                label: 'Rentang Points',
+                defaultValue: 'all',
+                options: [
+                  { value: 'all',    label: 'Semua Points' },
+                  { value: 'low',    label: '< 100 points' },
+                  { value: 'medium', label: '100-499 points' },
+                  { value: 'high',   label: '500+ points' },
+                ],
+              },
+            ]}
+            sortOptions={[
+              { value: 'name_asc',    label: 'Nama (A-Z)' },
+              { value: 'name_desc',   label: 'Nama (Z-A)' },
+              { value: 'points_desc', label: 'Points Terbanyak' },
+              { value: 'points_asc',  label: 'Points Tersedikit' },
+              { value: 'joined_desc', label: 'Terbaru Bergabung' },
+              { value: 'joined_asc',  label: 'Terlama Bergabung' },
+            ]}
+            defaultSort="name_asc"
+          />
+
+          <CustomersTable
+            customers={customers}
+            showActions={true}
             currentPage={page}
             pageSize={limit}
             totalItems={total}

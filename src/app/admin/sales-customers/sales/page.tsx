@@ -158,6 +158,7 @@ async function getVariants() {
   const variants = await db.productVariant.findMany({
     where: {
       isActive: true,
+      product: { isActive: true },
       OR: [
         { stock: { gt: 0 } },
         { product: { type: 'PREORDER' } },

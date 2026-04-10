@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { PaymentStatus } from '@prisma/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { createSaleAction } from '@/actions/sales';
-import { Plus, Trash2, Gift, X, User, Search, ChevronDown, UserPlus, ShoppingCart, CreditCard, Package, FileText, Minus } from 'lucide-react';
+import { Plus, Trash2, Gift, X, User, Search, ChevronDown, UserPlus, ShoppingCart, CreditCard, Package, FileText, Minus, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { QuickAddCustomerForm } from '@/components/customers/quick-add-customer-form';
 
@@ -302,7 +302,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="gap-2">
+          <Button className="gap-2 bg-[#028697] hover:bg-[#027080] shadow-sm">
             <Plus className="w-4 h-4" />
             Penjualan Baru
           </Button>
@@ -311,20 +311,24 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
       <DialogContent
         aria-describedby={undefined}
-        className="w-[95vw] max-w-[95vw] sm:max-w-[680px] min-h-[80vh] max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0"
+        className="w-[95vw] max-w-[95vw] sm:max-w-[680px] min-h-[80vh] max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0 border-0 shadow-2xl"
       >
         {/* ── Header ── */}
-        <DialogHeader className="px-5 pt-5 pb-4 border-b bg-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-              <ShoppingCart className="w-4 h-4 text-white" />
+        <div className="relative bg-gradient-to-br from-[#028697] to-[#016d7a] px-6 pt-5 pb-7 shrink-0">
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-8 w-16 h-16 rounded-full bg-white/5 translate-y-1/2 pointer-events-none" />
+
+          <div className="relative flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <DialogTitle className="text-base font-semibold text-gray-900 text-left">Penjualan Baru</DialogTitle>
-              <p className="text-xs text-gray-400 mt-0.5 text-left">Isi detail transaksi di bawah ini</p>
-            </div>
+            <DialogHeader className="space-y-0.5 text-left p-0">
+              <DialogTitle className="text-white text-lg font-semibold leading-tight">Penjualan Baru</DialogTitle>
+              <p className="text-white/65 text-xs font-normal">Isi detail transaksi di bawah ini</p>
+            </DialogHeader>
           </div>
-        </DialogHeader>
+        </div>
 
         {/* ── Scrollable Body ── */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
@@ -337,7 +341,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
             </div>
 
             {showQuickAddForm && (
-              <div className="p-3 border border-blue-100 rounded-xl bg-blue-50/60">
+              <div className="p-3 border border-[#028697]/20 rounded-xl bg-[#028697]/[0.04]">
                 <QuickAddCustomerForm
                   onSuccess={handleQuickAddSuccess}
                   onCancel={() => setShowQuickAddForm(false)}
@@ -351,18 +355,18 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                 onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
                 className={`flex items-center gap-2 w-full min-h-[46px] px-3 py-2 border rounded-xl text-left transition-all text-sm ${
                   customerSelected
-                    ? 'border-blue-300 bg-blue-50 hover:bg-blue-100/60'
+                    ? 'border-[#028697]/30 bg-[#028697]/[0.06] hover:bg-[#028697]/[0.09]'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
                 {customerSelected ? (
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0 text-white text-xs font-bold">
+                    <div className="w-8 h-8 rounded-full bg-[#028697] flex items-center justify-center shrink-0 text-white text-xs font-bold">
                       {getCustomerDisplayName()?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm text-gray-900 truncate">{getCustomerDisplayName()}</p>
-                      <p className="text-xs text-blue-500">
+                      <p className="text-xs text-[#028697]">
                         {customerType === 'member' ? `Member · ${selectedCustomer?.points ?? 0} poin` : 'Non-Member'}
                       </p>
                     </div>
@@ -395,7 +399,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         placeholder="Cari nama pelanggan..."
                         value={customerSearch}
                         onChange={(e) => setCustomerSearch(e.target.value)}
-                        className="pl-8 h-9 text-sm border-gray-200 rounded-lg"
+                        className="pl-8 h-9 text-sm border-gray-200 rounded-lg focus-visible:ring-[#028697]/30 focus-visible:border-[#028697]"
                         autoFocus
                       />
                     </div>
@@ -403,7 +407,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                       <button
                         type="button"
                         onClick={() => { setShowQuickAddForm(true); setIsCustomerDropdownOpen(false); }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold text-[#028697] bg-[#028697]/[0.06] hover:bg-[#028697]/[0.1] rounded-lg transition-colors"
                       >
                         <UserPlus className="w-3.5 h-3.5" />
                         + Tambah Pelanggan Baru
@@ -421,9 +425,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                           <div
                             key={customer.id}
                             onClick={() => handleCustomerChange(customer.id)}
-                            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${customerId === customer.id ? 'bg-blue-50' : ''}`}
+                            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${customerId === customer.id ? 'bg-[#028697]/[0.06]' : ''}`}
                           >
-                            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-700 text-xs font-bold">
+                            <div className="w-8 h-8 rounded-full bg-[#028697]/10 flex items-center justify-center shrink-0 text-[#028697] text-xs font-bold">
                               {customer.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -431,7 +435,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                               <p className="text-xs text-gray-400">{customer.points} poin</p>
                             </div>
                             {customerId === customer.id && (
-                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-[#028697] flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -451,7 +455,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                           <div
                             key={customer.id}
                             onClick={() => handleCustomerChange(customer.id)}
-                            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${nonMemberCustomerId === customer.id ? 'bg-blue-50' : ''}`}
+                            className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${nonMemberCustomerId === customer.id ? 'bg-[#028697]/[0.06]' : ''}`}
                           >
                             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-gray-600 text-xs font-bold">
                               {customer.name.charAt(0).toUpperCase()}
@@ -461,7 +465,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                               <p className="text-xs text-gray-400">{customer.phone}</p>
                             </div>
                             {nonMemberCustomerId === customer.id && (
-                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-[#028697] flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -491,7 +495,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Keranjang</span>
                   </div>
                   {items.length > 0 && (
-                    <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                    <span className="text-[11px] font-bold text-[#028697] bg-[#028697]/[0.08] px-2.5 py-0.5 rounded-full border border-[#028697]/20">
                       {items.length} item · {items.reduce((sum, item) => sum + item.quantity, 0)} pcs
                     </span>
                   )}
@@ -505,7 +509,6 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                   </div>
                 ) : (
                   <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                    {/* Column headers */}
                     <div className="grid grid-cols-[1fr,150px,auto] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-100">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Produk</span>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Qty</span>
@@ -564,9 +567,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                 <div className="border border-gray-200 rounded-xl p-3 bg-gray-50/40 space-y-2.5">
                   {/* Selected product preview */}
                   {selectedVariant && (
-                    <div className="flex items-center gap-2.5 p-2.5 bg-white border border-blue-200 rounded-lg shadow-sm">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                        <Package className="w-4 h-4 text-blue-500" />
+                    <div className="flex items-center gap-2.5 p-2.5 bg-white border border-[#028697]/25 rounded-lg shadow-sm">
+                      <div className="w-8 h-8 rounded-lg bg-[#028697]/10 border border-[#028697]/15 flex items-center justify-center shrink-0">
+                        <Package className="w-4 h-4 text-[#028697]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 truncate">
@@ -600,7 +603,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         setIsProductDropdownOpen(true);
                       }}
                       onFocus={() => setIsProductDropdownOpen(true)}
-                      className="pl-8 h-9 text-sm border-gray-200 rounded-lg bg-white"
+                      className="pl-8 h-9 text-sm border-gray-200 rounded-lg bg-white focus-visible:ring-[#028697]/30 focus-visible:border-[#028697]"
                     />
                   </div>
 
@@ -614,7 +617,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                           <div
                             key={variant.id}
                             onClick={() => handleProductSelect(variant.id)}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${selectedVariantId === variant.id ? 'bg-blue-50' : ''}`}
+                            className={`flex items-center gap-2.5 px-3 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 ${selectedVariantId === variant.id ? 'bg-[#028697]/[0.06]' : ''}`}
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate">
@@ -628,7 +631,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                               </p>
                             </div>
                             {selectedVariantId === variant.id && (
-                              <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
+                              <div className="w-5 h-5 rounded-full bg-[#028697] flex items-center justify-center shrink-0">
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -650,7 +653,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                           setQuantity(next);
                           setQuantityDisplay(String(next));
                         }}
-                        className="w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        className="w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
@@ -673,7 +676,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                           setQuantity(next);
                           setQuantityDisplay(String(next));
                         }}
-                        className="w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+                        className="w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -683,7 +686,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                       type="button"
                       onClick={addItem}
                       disabled={!selectedVariantId || quantity <= 0}
-                      className="flex-1 h-9 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg text-sm font-semibold gap-1.5 transition-colors"
+                      className="flex-1 h-9 bg-[#028697] hover:bg-[#027080] disabled:opacity-40 text-white rounded-lg text-sm font-semibold gap-1.5 transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       Tambah
@@ -694,16 +697,17 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
               {/* ─── 4. PEMBAYARAN ─── */}
               <section className="space-y-2.5">
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2 mb-1">
                   <CreditCard className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Pembayaran</span>
+                  <div className="flex-1 border-t border-gray-100" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-medium">Metode</Label>
+                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Metode</Label>
                     <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg">
+                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg focus:ring-[#028697]/30 focus:border-[#028697]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -714,9 +718,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-medium">Status</Label>
+                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Status</Label>
                     <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
-                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg">
+                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg focus:ring-[#028697]/30 focus:border-[#028697]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -730,7 +734,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-medium">Diskon</Label>
+                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Diskon</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
@@ -742,11 +746,11 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         handleDiscountChange(num);
                       }}
                       placeholder="0"
-                      className="h-9 text-sm border-gray-200 rounded-lg"
+                      className="h-9 text-sm border-gray-200 rounded-lg focus-visible:ring-[#028697]/30 focus-visible:border-[#028697]"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-medium">Pajak</Label>
+                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Pajak</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
@@ -758,11 +762,11 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         setTax(num);
                       }}
                       placeholder="0"
-                      className="h-9 text-sm border-gray-200 rounded-lg"
+                      className="h-9 text-sm border-gray-200 rounded-lg focus-visible:ring-[#028697]/30 focus-visible:border-[#028697]"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-medium">Ongkir</Label>
+                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Ongkir</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
@@ -774,7 +778,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                         setOngkir(num);
                       }}
                       placeholder="0"
-                      className="h-9 text-sm border-gray-200 rounded-lg"
+                      className="h-9 text-sm border-gray-200 rounded-lg focus-visible:ring-[#028697]/30 focus-visible:border-[#028697]"
                     />
                   </div>
                 </div>
@@ -795,7 +799,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                   placeholder="Tambahkan catatan opsional..."
                   rows={2}
                   maxLength={50}
-                  className="text-sm resize-none border-gray-200 rounded-xl"
+                  className="text-sm resize-none border-gray-200 rounded-xl focus-visible:ring-[#028697]/30 focus-visible:border-[#028697]"
                 />
               </section>
 
@@ -921,16 +925,15 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
         </div>
 
         {/* ── Footer ── */}
-        <DialogFooter className="px-5 py-4 border-t bg-white shrink-0 gap-2.5 flex-row">
-          <Button
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50/50 shrink-0">
+          <button
             type="button"
-            variant="outline"
             onClick={() => setOpen(false)}
             disabled={loading}
-            className="flex-1 sm:flex-none h-10 border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl font-medium"
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
           >
             Batal
-          </Button>
+          </button>
           <Button
             type="button"
             onClick={handleSubmit}
@@ -941,24 +944,21 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
               (discount + pointDiscount) > subtotal ||
               total < 0
             }
-            className="flex-1 h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl font-bold gap-2 transition-colors"
+            className="bg-[#028697] hover:bg-[#027080] disabled:opacity-50 text-white rounded-xl font-bold gap-2 transition-colors min-w-[160px] h-10"
           >
             {loading ? (
-              <>
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Memproses...
-              </>
+              </span>
             ) : (
-              <>
+              <span className="flex items-center gap-2">
                 <ShoppingCart className="w-4 h-4" />
                 Selesaikan Transaksi
-              </>
+              </span>
             )}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

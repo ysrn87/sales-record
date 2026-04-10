@@ -11,6 +11,7 @@ async function getSales(params: {
   limit?: number;
   search?: string;
   payment?: string;
+  paymentStatus?: string;
   sort?: string;
 }) {
   const { 
@@ -18,6 +19,7 @@ async function getSales(params: {
     limit = 10, 
     search = '', 
     payment = 'all',
+    paymentStatus = 'all',
     sort = 'date_desc'
   } = params;
   
@@ -34,6 +36,11 @@ async function getSales(params: {
           name: { contains: search, mode: 'insensitive' as const } 
         } 
       },
+      {
+        nonMemberCustomer: {
+          name: { contains: search, mode: 'insensitive' as const }
+        }
+      },
       { 
         saleNumber: { contains: search, mode: 'insensitive' as const } 
       },
@@ -48,6 +55,11 @@ async function getSales(params: {
   // Filter by payment method
   if (payment !== 'all') {
     where.paymentMethod = payment;
+  }
+
+  // Filter by payment status
+  if (paymentStatus !== 'all') {
+    where.paymentStatus = paymentStatus;
   }
 
   // Build orderBy clause
@@ -146,6 +158,7 @@ async function getVariants() {
   const variants = await db.productVariant.findMany({
     where: {
       isActive: true,
+      product: { isActive: true },
       OR: [
         { stock: { gt: 0 } },
         { product: { type: 'PREORDER' } },
@@ -194,6 +207,7 @@ export default async function AdminSalesPage({
     limit?: string;
     search?: string;
     payment?: string;
+    paymentStatus?: string;
     sort?: string;
   }>;
 }) {
@@ -202,10 +216,11 @@ export default async function AdminSalesPage({
   const limit = Number(params.limit) || 10;
   const search = params.search || '';
   const payment = params.payment || 'all';
+  const paymentStatus = params.paymentStatus || 'all';
   const sort = params.sort || 'date_desc';
 
   const [{ sales, total }, variants, customers, conversionRate, session] = await Promise.all([
-    getSales({ page, limit, search, payment, sort }),
+    getSales({ page, limit, search, payment, paymentStatus, sort }),
     getVariants(),
     getCustomers(),
     getPointsConversionRate(),
@@ -215,7 +230,7 @@ export default async function AdminSalesPage({
   const userRole = session?.user?.role ?? 'CASHIER';
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <div className="flex justify-between items-center">
         {/* Desktop button — hidden on mobile */}
         <div className="hidden sm:block">
@@ -224,7 +239,7 @@ export default async function AdminSalesPage({
       </div>
 
       {/* Mobile FAB */}
-      <div className="sm:hidden fixed bottom-20 right-6 z-50">
+      <div className="sm:hidden fixed bottom-24 right-6 z-50">
         <NewSaleDialog
           variants={variants}
           customers={customers}
@@ -239,37 +254,48 @@ export default async function AdminSalesPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Penjualan Terbaru</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Penjualan Terbaru</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search & Filter Bar */}
           <SearchFilterBar
-            searchPlaceholder="Search by customer name, sale number, or cashier..."
+            searchPlaceholder="Customer, nomor penjualan, atau kasir..."
             filters={[
               {
                 key: 'payment',
-                label: 'Payment Method',
+                label: 'Metode Pembayaran',
                 defaultValue: 'all',
                 options: [
-                  { value: 'all', label: 'All Methods' },
-                  { value: 'CASH', label: 'Cash' },
-                  { value: 'CARD', label: 'Card' },
-                  { value: 'TRANSFER', label: 'Bank Transfer' },
+                  { value: 'all',      label: 'Semua Metode' },
+                  { value: 'CASH',     label: 'Cash' },
+                  { value: 'CARD',     label: 'Card' },
+                  { value: 'TRANSFER', label: 'Transfer Bank' },
+                ],
+              },
+              {
+                key: 'paymentStatus',
+                label: 'Status Pembayaran',
+                defaultValue: 'all',
+                options: [
+                  { value: 'all',     label: 'Semua Status' },
+                  { value: 'PAID',    label: 'Lunas' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'UNPAID',  label: 'Belum Lunas' },
                 ],
               },
             ]}
             sortOptions={[
-              { value: 'date_desc', label: 'Newest First' },
-              { value: 'date_asc', label: 'Oldest First' },
-              { value: 'total_desc', label: 'Highest Amount' },
-              { value: 'total_asc', label: 'Lowest Amount' },
+              { value: 'date_desc',  label: 'Terbaru' },
+              { value: 'date_asc',   label: 'Terlama' },
+              { value: 'total_desc', label: 'Jumlah Terbesar' },
+              { value: 'total_asc',  label: 'Jumlah Terkecil' },
             ]}
             defaultSort="date_desc"
           />
 
           {/* Sales Table */}
-          <SalesTable 
-            sales={sales} 
+          <SalesTable
+            sales={sales}
             currentPage={page}
             pageSize={limit}
             totalItems={total}

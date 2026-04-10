@@ -292,8 +292,8 @@ export async function getSaleById(id: string) {
 export async function updateSaleAction(id: string, input: CreateSaleInput) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'ADMINISTRATOR') {
-      return { success: false, error: 'Unauthorized - Admin access required' };
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
     }
 
     const { items, customerId, paymentMethod, paymentStatus = 'PAID', discount = 0, tax = 0, ongkir = 0, notes, pointsRedeemed = 0 } = input;
@@ -520,8 +520,8 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
 export async function deleteSaleAction(id: string) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'ADMINISTRATOR') {
-      return { success: false, error: 'Unauthorized - Admin access required' };
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
     }
 
     const sale = await db.sale.findUnique({

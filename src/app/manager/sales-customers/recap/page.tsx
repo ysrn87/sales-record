@@ -207,13 +207,16 @@ export default async function ManagerRecapPage({
               <div className="p-2 bg-orange-100 rounded-lg">
                 <BarChart2 className="w-4 h-4 text-orange-600" />
               </div>
-              <div>
+              <div className='min-w-0'>
                 <p className="text-xs text-gray-500">Produk Terlaris</p>
-                <p className="font-bold text-sm truncate max-w-[100px]">
-                  {topProduct
-                    ? `${topProduct.productName} – ${topProduct.variantName}`
-                    : '–'}
-                </p>
+                {topProduct ? (
+                  <>
+                    <p className="font-bold text-xs truncate">{topProduct.variantName}</p>
+                    <p className="text-xs text-amber-500 truncate">{topProduct.productName} - {topProduct.sku}</p>
+                  </>
+                ) : (
+                  <p className="font-bold text-sm">–</p>
+                )}
               </div>
             </div>
           </CardContent>

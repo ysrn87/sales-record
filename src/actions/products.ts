@@ -99,8 +99,8 @@ export async function updateProductAction(id: string, formData: FormData) {
 export async function deleteProductAction(id: string) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'ADMINISTRATOR') {
-      return { success: false, error: 'Unauthorized - Admin access required' };
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
     }
 
     await db.product.delete({
@@ -252,8 +252,8 @@ export async function updateVariantAction(id: string, formData: FormData) {
 export async function deleteVariantAction(id: string) {
   try {
     const session = await auth();
-    if (!session || session.user.role !== 'ADMINISTRATOR') {
-      return { success: false, error: 'Unauthorized - Admin access required' };
+    if (!session || (session.user.role !== 'ADMINISTRATOR' && session.user.role !== 'MANAGER')) {
+      return { success: false, error: 'Unauthorized' };
     }
 
     await db.productVariant.delete({
