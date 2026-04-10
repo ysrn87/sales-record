@@ -19,18 +19,24 @@ type CreateProps = {
   mode: 'create';
   customer?: never;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 type EditProps = {
   mode: 'edit';
   customer: { id: string; name: string; phone: string; address: string | null };
   trigger?: React.ReactNode;
+  open?: never;
+  onOpenChange?: never;
 };
 
 type NonMemberDialogProps = CreateProps | EditProps;
 
-export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProps) {
-  const [open, setOpen] = useState(false);
+export function NonMemberDialog({ mode, customer, trigger, open: controlledOpen, onOpenChange: onControlledOpenChange }: NonMemberDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(mode === 'edit' ? customer.name : '');
   const [phone, setPhone] = useState(mode === 'edit' ? customer.phone : '');
@@ -40,6 +46,11 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
   const isCreate = mode === 'create';
 
   const toTitleCase = (val: string) => val.replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const setOpen = (v: boolean) => {
+    if (!isControlled) setInternalOpen(v);
+    onControlledOpenChange?.(v);
+  };
 
   const handleOpenChange = (v: boolean) => {
     setOpen(v);
@@ -90,7 +101,7 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
   const defaultTrigger = isCreate ? (
     <Button className="bg-[#028697] hover:bg-[#027080] shadow-sm">
       <UserPlus className="w-4 h-4 mr-2" />
-      Tambah Non-Member
+      Tambah Pelanggan
     </Button>
   ) : (
     <Button variant="ghost" size="sm" title="Edit Pelanggan" className="group">

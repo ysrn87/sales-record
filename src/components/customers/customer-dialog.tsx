@@ -44,6 +44,8 @@ interface CustomerDialogProps {
   };
   trigger?: React.ReactNode;
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function FieldLabel({
@@ -80,8 +82,15 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-export function CustomerDialog({ mode, customer, trigger, onSuccess }: CustomerDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CustomerDialog({ mode, customer, trigger, onSuccess, open: controlledOpen, onOpenChange: onControlledOpenChange }: CustomerDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  const setOpen = (v: boolean) => {
+    if (!isControlled) setInternalOpen(v);
+    onControlledOpenChange?.(v);
+  };
   const [loading, setLoading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(customer?.photoUrl || '');
   const [points, setPoints] = useState(customer?.points || 0);
