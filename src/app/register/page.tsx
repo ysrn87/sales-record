@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { UserPlus, User, Phone, Mail, MapPin, Calendar, Lock, ArrowLeft, Gift, Sparkles, ChevronDown, Eye, EyeOff, Notebook } from 'lucide-react';
+import { UserPlus, User, Phone, Mail, MapPin, Calendar, Lock, ArrowLeft, Sparkles, ChevronDown, Eye, EyeOff, Notebook } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import Image from 'next/image';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -122,8 +123,8 @@ export default function RegisterPage() {
       !unlocked
         ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
         : !filled
-        ? 'border-[#1ecbe1] bg-[#e0f9fc] text-[#0fa8be] cursor-pointer'
-        : 'border-input bg-background text-gray-700 cursor-pointer',
+          ? 'border-[#1ecbe1] bg-[#e0f9fc] text-[#0fa8be] cursor-pointer'
+          : 'border-input bg-background text-gray-700 cursor-pointer',
     ].join(' ');
 
   return (
@@ -136,8 +137,14 @@ export default function RegisterPage() {
 
       <Card className="w-full max-w-md shadow-2xl border-0 relative z-10 backdrop-blur-sm bg-white/95">
         <CardHeader className="space-y-3 pb-6">
-          <div className="mx-auto w-16 h-16 bg-[#028697] rounded-2xl flex items-center justify-center shadow-lg">
-            <Gift className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 flex items-center justify-center">
+            <Image
+              src="/icon-512x512.png"
+              alt="Dapur Lisa"
+              width={64}
+              height={64}
+              className="rounded-2xl shadow-lg"
+            />
           </div>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-center text-[#028697]">
             Daftar Member
@@ -213,9 +220,8 @@ export default function RegisterPage() {
                 {[!!birthYear, !!birthMonth, !!birthDay].map((done, i) => (
                   <div
                     key={i}
-                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                      done ? 'bg-[#1ecbe1]' : 'bg-gray-200'
-                    }`}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${done ? 'bg-[#1ecbe1]' : 'bg-gray-200'
+                      }`}
                   />
                 ))}
               </div>

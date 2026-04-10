@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { LogIn, Mail, Lock, UserPlus, ShoppingBag, Sparkles, Eye, EyeOff, Notebook } from 'lucide-react';
+import { LogIn, Mail, Lock, Sparkles, Eye, EyeOff, Notebook } from 'lucide-react';
+import Image from 'next/image';
 
 function LoginForm() {
   const router = useRouter();
@@ -48,8 +49,14 @@ function LoginForm() {
 
       <Card className="w-3/4 max-w-md shadow-2xl relative z-10 backdrop-blur-lg bg-transparent">
         <CardHeader className="space-y-3 pb-6">
-          <div className="mx-auto w-16 h-16 bg-[#028697] rounded-2xl flex items-center justify-center shadow-lg">
-            <ShoppingBag className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 flex items-center justify-center">
+            <Image
+              src="/icon-512x512.png"
+              alt="Dapur Lisa"
+              width={64}
+              height={64}
+              className="rounded-2xl shadow-lg"
+            />
           </div>
           <CardTitle className="text-xl font-bold text-center text-[#028697]">
             Dapur Lisa
