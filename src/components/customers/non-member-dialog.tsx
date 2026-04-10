@@ -39,6 +39,8 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
 
   const isCreate = mode === 'create';
 
+  const toTitleCase = (val: string) => val.replace(/\b\w/g, (c) => c.toUpperCase());
+
   const handleOpenChange = (v: boolean) => {
     setOpen(v);
     if (!v) {
@@ -144,7 +146,7 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
                 id="nm-name"
                 name="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(toTitleCase(e.target.value))}
                 required
                 disabled={loading}
                 maxLength={80}
@@ -197,7 +199,7 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
                 id="nm-address"
                 name="address"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => setAddress(toTitleCase(e.target.value))}
                 required
                 disabled={loading}
                 maxLength={250}

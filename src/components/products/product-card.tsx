@@ -132,7 +132,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
               )}
               Varian
             </Button>
-            <VariantDialog mode="create" productId={product.id} isPreorder={isPreorder} />
+            <VariantDialog mode="create" productId={product.id} productSku={product.sku} variantCount={product.variants.length} isPreorder={isPreorder} />
           </div>
         )}
 
@@ -169,7 +169,7 @@ export function ProductCard({ product, filterStatus }: ProductCardProps) {
                     ? 'Belum ada varian tersedia'
                     : `No ${filterStatus} variants found`}
                 </p>
-                <VariantDialog mode="create" productId={product.id} isPreorder={isPreorder} />
+                <VariantDialog mode="create" productId={product.id} productSku={product.sku} variantCount={product.variants.length} isPreorder={isPreorder} />
               </div>
             ) : (
               <>

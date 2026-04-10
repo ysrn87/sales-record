@@ -41,8 +41,8 @@ const TYPE_OPTIONS = [
   {
     value: 'INCOME' as const,
     icon: TrendingUp,
-    label: 'Pemasukan',
-    sublabel: 'Uang masuk',
+    label: 'Income',
+    sublabel: 'Pemasukan',
     activeClass: 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-green-50 text-emerald-700',
     dotClass: 'bg-emerald-500',
     iconBg: 'bg-emerald-500',
@@ -50,8 +50,8 @@ const TYPE_OPTIONS = [
   {
     value: 'EXPENSE' as const,
     icon: TrendingDown,
-    label: 'Pengeluaran',
-    sublabel: 'Uang keluar',
+    label: 'Spend',
+    sublabel: 'Pengeluaran',
     activeClass: 'border-rose-500 bg-gradient-to-br from-rose-50 to-red-50 text-rose-700',
     dotClass: 'bg-rose-500',
     iconBg: 'bg-rose-500',

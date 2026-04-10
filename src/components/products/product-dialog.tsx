@@ -39,9 +39,12 @@ const TYPE_OPTIONS = [
   },
 ];
 
+const toTitleCase = (val: string) => val.replace(/\b\w/g, (c) => c.toUpperCase());
+
 export function ProductDialog({ mode, product, trigger }: ProductDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [productName, setProductName] = useState(product?.name || '');
   const [productType, setProductType] = useState<'READY_STOCK' | 'PREORDER'>(
     (product?.type as 'READY_STOCK' | 'PREORDER') || 'READY_STOCK'
   );
@@ -87,6 +90,7 @@ export function ProductDialog({ mode, product, trigger }: ProductDialogProps) {
     setOpen(isOpen);
     if (isOpen) {
       setProductType((product?.type as 'READY_STOCK' | 'PREORDER') || 'READY_STOCK');
+      setProductName(product?.name || '');
     }
   };
 
@@ -197,7 +201,8 @@ export function ProductDialog({ mode, product, trigger }: ProductDialogProps) {
                   id="name"
                   name="name"
                   required
-                  defaultValue={product?.name}
+                  value={productName}
+                  onChange={(e) => setProductName(toTitleCase(e.target.value))}
                   placeholder="Contoh: Kue Lapis, Tart Coklat"
                   disabled={loading}
                   maxLength={30}

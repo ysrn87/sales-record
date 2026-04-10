@@ -11,6 +11,8 @@ import { Plus, Pencil, Loader2, Tag, Layers, DollarSign, BarChart2, Star, AlertT
 interface VariantDialogProps {
   mode: 'create' | 'edit';
   productId?: string;
+  productSku?: string;
+  variantCount?: number;
   isPreorder?: boolean;
   variant?: {
     id: string;
@@ -85,18 +87,30 @@ function CurrencyInput({
   );
 }
 
-export function VariantDialog({ mode, productId, isPreorder = false, variant, trigger }: VariantDialogProps) {
+const toTitleCase = (val: string) => val.replace(/\b\w/g, (c) => c.toUpperCase());
+
+function autoGenerateSku(productSku: string, variantCount: number): string {
+  const index = variantCount + 1;
+  return `${productSku}-${index.toString(16).toUpperCase().padStart(2, '0')}`;
+}
+
+export function VariantDialog({ mode, productId, productSku, variantCount = 0, isPreorder = false, variant, trigger }: VariantDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const isCreate = mode === 'create';
+
+  const [variantName, setVariantName] = useState(variant?.name || '');
+  const [skuOverride, setSkuOverride] = useState(false);
+  const computedSku = isCreate && productSku ? autoGenerateSku(productSku, variantCount) : (variant?.sku || '');
+  const [sku, setSku] = useState(computedSku);
 
   const [price, setPrice] = useState(variant?.price?.toString() || '');
   const [cost, setCost] = useState(variant?.cost?.toString() || '');
   const [points, setPoints] = useState(variant?.points?.toString() || '0');
   const [stock, setStock] = useState('0');
   const [lowStock, setLowStock] = useState(variant?.lowStock?.toString() || '10');
-
-  const isCreate = mode === 'create';
 
   const formatNumber = (value: string): string => {
     const cleanValue = value.replace(/[^\d.]/g, '');
@@ -160,6 +174,10 @@ export function VariantDialog({ mode, productId, isPreorder = false, variant, tr
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (isOpen) {
+      setVariantName(variant?.name || '');
+      const newComputedSku = isCreate && productSku ? autoGenerateSku(productSku, variantCount) : (variant?.sku || '');
+      setSku(newComputedSku);
+      setSkuOverride(false);
       setPrice(variant?.price?.toString() || '');
       setCost(variant?.cost?.toString() || '');
       setPoints(variant?.points?.toString() || '0');
@@ -233,7 +251,8 @@ export function VariantDialog({ mode, productId, isPreorder = false, variant, tr
                   id="name"
                   name="name"
                   required
-                  defaultValue={variant?.name}
+                  value={variantName}
+                  onChange={(e) => setVariantName(toTitleCase(e.target.value))}
                   placeholder="Contoh: 500gr, Coklat"
                   disabled={loading}
                   maxLength={30}
@@ -241,7 +260,18 @@ export function VariantDialog({ mode, productId, isPreorder = false, variant, tr
                 />
               </div>
               <div>
-                <FieldLabel label="Kode SKU" required />
+                <div className="flex items-center justify-between mb-1.5">
+                  <FieldLabel label="Kode SKU" required />
+                  {isCreate && productSku && (
+                    <button
+                      type="button"
+                      onClick={() => setSkuOverride((v) => !v)}
+                      className="text-[10px] text-[#028697] hover:underline shrink-0 -mt-1.5"
+                    >
+                      {skuOverride ? 'Gunakan Auto' : 'Custom'}
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     <span className="text-[9px] font-mono border border-gray-300 rounded px-1 py-0.5 text-gray-400 leading-none">
@@ -252,13 +282,18 @@ export function VariantDialog({ mode, productId, isPreorder = false, variant, tr
                     id="sku"
                     name="sku"
                     required
-                    defaultValue={variant?.sku}
-                    placeholder="KL-001-A"
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value.toUpperCase())}
+                    readOnly={isCreate && productSku != null && !skuOverride}
+                    placeholder="KL-001-0A"
                     disabled={loading}
-                    maxLength={15}
-                    className="pl-12 h-10 font-mono tracking-wider border-gray-200 focus-visible:ring-[#028697]/30 focus-visible:border-[#028697] transition-colors placeholder:text-gray-300 placeholder:font-sans placeholder:tracking-normal uppercase"
+                    maxLength={20}
+                    className={`pl-12 h-10 font-mono tracking-wider border-gray-200 focus-visible:ring-[#028697]/30 focus-visible:border-[#028697] transition-colors placeholder:text-gray-300 placeholder:font-sans placeholder:tracking-normal uppercase ${isCreate && productSku && !skuOverride ? 'bg-gray-50 text-gray-400 cursor-default' : ''}`}
                   />
                 </div>
+                {isCreate && productSku && !skuOverride && (
+                  <p className="text-[10px] text-gray-300 mt-1">Auto dari kode produk</p>
+                )}
               </div>
             </div>
 
