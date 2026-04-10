@@ -364,7 +364,10 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setIsCustomerDropdownOpen(!isCustomerDropdownOpen)}
+                onClick={() => {
+                  setIsCustomerDropdownOpen(!isCustomerDropdownOpen);
+                  setShowQuickAddForm(false);
+                }}
                 className={`flex items-center gap-2 w-full min-h-[46px] px-3 py-2 border rounded-xl text-left transition-all text-sm ${
                   customerSelected
                     ? 'border-[#028697]/30 bg-[#028697]/[0.06] hover:bg-[#028697]/[0.09]'

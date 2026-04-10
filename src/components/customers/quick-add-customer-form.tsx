@@ -31,6 +31,8 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
     setPhone(formatted);
   };
 
+  const toTitleCase = (val: string) => val.replace(/\b\w/g, (c) => c.toUpperCase());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -149,7 +151,7 @@ export function QuickAddCustomerForm({ onSuccess, onCancel }: QuickAddCustomerFo
           <Textarea
             id="quick-address"
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={(e) => setAddress(toTitleCase(e.target.value))}
             placeholder="Street, City, Postal Code"
             required
             disabled={loading}
