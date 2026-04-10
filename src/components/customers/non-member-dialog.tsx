@@ -1,14 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { createNonMemberCustomerAction, updateNonMemberCustomerAction } from '@/actions/customers';
-import { Pencil, Plus, UserPlus } from 'lucide-react';
+import { Loader2, MapPin, Pencil, Phone, UserPlus, Users } from 'lucide-react';
 
 type CreateProps = {
   mode: 'create';
@@ -31,6 +36,8 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
   const [phone, setPhone] = useState(mode === 'edit' ? customer.phone : '');
   const [address, setAddress] = useState(mode === 'edit' ? (customer.address ?? '') : '');
   const { toast } = useToast();
+
+  const isCreate = mode === 'create';
 
   const handleOpenChange = (v: boolean) => {
     setOpen(v);
@@ -56,18 +63,16 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
   const handleSubmit = async (formData: FormData) => {
     setLoading(true);
     try {
-      const result =
-        mode === 'create'
-          ? await createNonMemberCustomerAction(formData)
-          : await updateNonMemberCustomerAction(customer.id, formData);
+      const result = isCreate
+        ? await createNonMemberCustomerAction(formData)
+        : await updateNonMemberCustomerAction(customer!.id, formData);
 
       if (result.success) {
         toast({
           title: 'Berhasil!',
-          description:
-            mode === 'create'
-              ? 'Pelanggan berhasil ditambahkan.'
-              : 'Data pelanggan berhasil diperbarui.',
+          description: isCreate
+            ? 'Pelanggan berhasil ditambahkan.'
+            : 'Data pelanggan berhasil diperbarui.',
         });
         setOpen(false);
       } else {
@@ -80,33 +85,61 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
     }
   };
 
-  const defaultTrigger =
-    mode === 'create' ? (
-      <Button>
-        <UserPlus className="w-4 h-4 mr-2" />
-        Tambah Non-Member
-      </Button>
-    ) : (
-      <Button variant="ghost" size="sm" title="Edit Pelanggan" className="group">
-        <Pencil className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />
-      </Button>
-    );
+  const defaultTrigger = isCreate ? (
+    <Button className="bg-[#028697] hover:bg-[#027080] shadow-sm">
+      <UserPlus className="w-4 h-4 mr-2" />
+      Tambah Non-Member
+    </Button>
+  ) : (
+    <Button variant="ghost" size="sm" title="Edit Pelanggan" className="group">
+      <Pencil className="w-4 h-4 text-white group-hover:text-slate-900 transition-colors" />
+    </Button>
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
-      <DialogContent aria-describedby={undefined} className="sm:max-w-[420px]">
-        <DialogHeader>
-          <DialogTitle>
-            {mode === 'create' ? 'Tambah Pelanggan' : 'Edit Pelanggan'}
-          </DialogTitle>
-        </DialogHeader>
+
+      <DialogContent
+        aria-describedby={undefined}
+        className="sm:max-w-[440px] p-0 gap-0 overflow-hidden border-0 shadow-2xl"
+      >
+        {/* Header band */}
+        <div className="relative bg-gradient-to-br from-[#028697] to-[#016d7a] px-6 pt-6 pb-8">
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-8 w-16 h-16 rounded-full bg-white/5 translate-y-1/2 pointer-events-none" />
+
+          <div className="relative flex items-center gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <DialogHeader className="space-y-0.5 text-left p-0">
+              <DialogTitle className="text-white text-lg font-semibold leading-tight">
+                {isCreate ? 'Tambah Pelanggan' : 'Edit Pelanggan'}
+              </DialogTitle>
+              <p className="text-white/65 text-xs font-normal">
+                {isCreate
+                  ? 'Daftarkan pelanggan baru tanpa keanggotaan'
+                  : `Mengedit: ${customer?.name}`}
+              </p>
+            </DialogHeader>
+          </div>
+        </div>
+
+        {/* Form body */}
         <form action={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="nm-name">
-                Nama <span className="text-red-500">*</span>
-              </Label>
+          <div className="px-6 pt-6 pb-2 space-y-4">
+
+            {/* Nama */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="nm-name"
+                className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-widest"
+              >
+                <Users className="w-3 h-3" />
+                Nama Lengkap <span className="text-red-400">*</span>
+              </label>
               <Input
                 id="nm-name"
                 name="name"
@@ -116,13 +149,19 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
                 disabled={loading}
                 maxLength={80}
                 placeholder="Nama Lengkap"
+                className="h-10 border-gray-200 focus-visible:ring-[#028697]/30 focus-visible:border-[#028697] transition-colors placeholder:text-gray-300"
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="nm-phone">
-                Telepon/WA <span className="text-red-500">*</span>
-              </Label>
+            {/* Telepon */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="nm-phone"
+                className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-widest"
+              >
+                <Phone className="w-3 h-3" />
+                Telepon / WA <span className="text-red-400">*</span>
+              </label>
               <Input
                 id="nm-phone"
                 name="phone"
@@ -141,13 +180,19 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
                 minLength={9}
                 maxLength={19}
                 placeholder="0812 3456 7890"
+                className="h-10 border-gray-200 focus-visible:ring-[#028697]/30 focus-visible:border-[#028697] transition-colors placeholder:text-gray-300"
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="nm-address">
-                Alamat <span className="text-red-500">*</span>
-              </Label>
+            {/* Alamat */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="nm-address"
+                className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-widest"
+              >
+                <MapPin className="w-3 h-3" />
+                Alamat <span className="text-red-400">*</span>
+              </label>
               <Textarea
                 id="nm-address"
                 name="address"
@@ -157,19 +202,43 @@ export function NonMemberDialog({ mode, customer, trigger }: NonMemberDialogProp
                 disabled={loading}
                 maxLength={250}
                 placeholder="Nama Jalan, Kota, Kode Pos"
+                className="resize-none border-gray-200 focus-visible:ring-[#028697]/30 focus-visible:border-[#028697] transition-colors placeholder:text-gray-300"
+                rows={3}
               />
-              <p className="text-xs text-gray-500 text-right">{address.length}/250 karakter</p>
+              <p className="text-[11px] text-gray-300 text-right">{address.length}/250</p>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+          {/* Footer */}
+          <div className="flex items-center justify-between gap-3 px-6 py-4 mt-2 border-t border-gray-100 bg-gray-50/50">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+              className="text-sm text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            >
               Batal
+            </button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-[#028697] hover:bg-[#027080] text-white shadow-sm min-w-[130px] transition-all"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Menyimpan...
+                </span>
+              ) : isCreate ? (
+                <span className="flex items-center gap-2">
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Tambah Pelanggan
+                </span>
+              ) : (
+                'Simpan Perubahan'
+              )}
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Menyimpan...' : mode === 'create' ? 'Tambah Pelanggan' : 'Simpan'}
-            </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
