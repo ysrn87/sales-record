@@ -425,7 +425,7 @@ export default function RegisterPage() {
             </Button>
           </Link>
 
-          <Link href="/landing" className="block">
+          <Link href="/catalog" className="block">
             <Button
               variant="outline"
               className="w-full h-7 font-normal border-[#a8f0f8] text-[#028697] hover:bg-[#e0f9fc]"

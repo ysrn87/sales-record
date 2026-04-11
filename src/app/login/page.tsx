@@ -148,7 +148,7 @@ function LoginForm() {
             </div>
           </div>
 
-          <Link href="/landing" className="block text-xs">
+          <Link href="/catalog" className="block text-xs">
             <Button
               variant="outline"
               className="w-full h-7 font-semibold border-0 text-[#028697] hover:bg-[#e0f9fc] hover:text-[#00545f] transition-all duration-200"

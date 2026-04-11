@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Search, SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, X, Check, Filter } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -11,6 +11,7 @@ interface Product {
 
 interface LandingFiltersProps {
   products: Product[];
+  layout?: 'bar' | 'sidebar';
 }
 
 const SORT_OPTIONS = [
@@ -21,7 +22,7 @@ const SORT_OPTIONS = [
   { value: 'name_desc',  label: 'Nama: Z–A' },
 ];
 
-export function LandingFilters({ products }: LandingFiltersProps) {
+export function LandingFilters({ products, layout = 'bar' }: LandingFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
@@ -44,18 +45,23 @@ export function LandingFilters({ products }: LandingFiltersProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Sync from URL when params change (shared between bar and sidebar)
+  useEffect(() => {
+    setSearch(searchParams.get('q') || '');
+    setSort(searchParams.get('sort') || 'default');
+    setProductId(searchParams.get('product') || '');
+  }, [searchParams]);
+
   const push = (q: string, s: string, p: string) => {
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (s && s !== 'default') params.set('sort', s);
     if (p) params.set('product', p);
-    startTransition(() => {
-      router.replace(`?${params.toString()}`, { scroll: false });
-    });
+    startTransition(() => router.replace(`?${params.toString()}`, { scroll: false }));
   };
 
-  const handleSearch  = (val: string) => { setSearch(val);  push(val, sort, productId); };
-  const handleSort    = (val: string) => { setSort(val);    setSortOpen(false); push(search, val, productId); };
+  const handleSearch  = (val: string) => { setSearch(val); push(val, sort, productId); };
+  const handleSort    = (val: string) => { setSort(val); setSortOpen(false); push(search, val, productId); };
   const handleProduct = (val: string) => {
     const next = productId === val ? '' : val;
     setProductId(next);
@@ -71,9 +77,94 @@ export function LandingFilters({ products }: LandingFiltersProps) {
   const selectedProduct = products.find(p => p.id === productId);
   const selectedSort    = SORT_OPTIONS.find(o => o.value === sort);
 
+  // ── SIDEBAR layout (desktop) ─────────────────────────────────────────────
+  if (layout === 'sidebar') {
+    return (
+      <div className="space-y-5">
+        {/* Search */}
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cari</p>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Produk atau varian..."
+              className="w-full pl-8 pr-8 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#028697] focus:ring-2 focus:ring-[#028697]/10 placeholder:text-slate-300 transition-all"
+            />
+            {search && (
+              <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Product filter */}
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Kategori</p>
+          <div className="space-y-0.5">
+            <button
+              onClick={() => handleProduct('')}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !productId ? 'bg-[#028697] text-white' : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Semua Produk
+              {!productId && <Check className="w-3.5 h-3.5" />}
+            </button>
+            {products.map(p => (
+              <button
+                key={p.id}
+                onClick={() => handleProduct(p.id)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${
+                  productId === p.id ? 'bg-[#028697] text-white' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span className="truncate pr-2">{p.name}</span>
+                {productId === p.id && <Check className="w-3.5 h-3.5 flex-shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort */}
+        <div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Urutkan</p>
+          <div className="space-y-0.5">
+            {SORT_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => handleSort(opt.value)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  sort === opt.value ? 'bg-[#028697] text-white' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {opt.label}
+                {sort === opt.value && <Check className="w-3.5 h-3.5" />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Clear */}
+        {hasFilters && (
+          <button
+            onClick={clearAll}
+            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-red-500 hover:bg-red-50 border border-red-100 rounded-xl transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+            Reset Filter
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ── BAR layout (mobile, default) ─────────────────────────────────────────
   return (
     <div className="space-y-2.5 pt-4 pb-3 sticky top-14 z-40 bg-[#f8fffe] border-b border-slate-100">
-
       {/* Search bar */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -93,7 +184,6 @@ export function LandingFilters({ products }: LandingFiltersProps) {
 
       {/* Filter row */}
       <div className="flex items-center gap-2">
-
         {/* Product dropdown */}
         <div className="relative flex-1" ref={productRef}>
           <button
@@ -159,7 +249,6 @@ export function LandingFilters({ products }: LandingFiltersProps) {
           )}
         </div>
 
-        {/* Clear button */}
         {hasFilters && (
           <button
             onClick={clearAll}
