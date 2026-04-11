@@ -109,12 +109,6 @@ export default async function LandingPage({
               <p className="text-[9px] text-slate-400 leading-none tracking-wide mt-0.5">Homemade · Halal</p>
             </div>
           </Link>
-          <Link
-            href="/login"
-            className="text-xs font-semibold bg-[#028697] text-white px-4 py-2 rounded-lg hover:bg-[#027080] transition-colors"
-          >
-            Login
-          </Link>
         </div>
       </header>
 
@@ -247,7 +241,7 @@ export default async function LandingPage({
                         ? { bg: 'bg-yellow-50 text-yellow-700 border-yellow-100', dot: 'bg-yellow-400', label: 'Terbatas', icon: false }
                         : { bg: 'bg-green-50 text-green-700 border-green-100', dot: 'bg-green-400', label: 'Tersedia', icon: false };
 
-                      const orderText = `Halo Dapur Lisa! Saya ingin memesan: ${variant.name} (${product.name}).`;
+                      const orderText = `Halo Dapur Lisa! Saya ingin memesan produk: *${product.name}* varian *${variant.name}*.`;
 
                       return (
                         <div
@@ -311,7 +305,7 @@ export default async function LandingPage({
       </div>
 
       {/* ── Floating WhatsApp ────────────────────────────────────────────────── */}
-      <div className="fixed bottom-6 right-4 z-50">
+      <div className="fixed bottom-12 right-4 z-50">
         <a
           href={waLink('Halo Dapur Lisa! Saya ingin tahu lebih lanjut tentang produk.')}
           target="_blank"
