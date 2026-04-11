@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Clock } from 'lucide-react';
 import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import { Pagination } from '@/components/ui/pagination';
 
@@ -14,6 +14,7 @@ interface StockItem {
   lowStock: number;
   product: {
     name: string;
+    type: string;
   };
 }
 
@@ -24,11 +25,11 @@ interface StockTableProps {
   totalItems: number;
 }
 
-export function StockTable({ 
-  stockItems, 
-  currentPage, 
-  pageSize, 
-  totalItems 
+export function StockTable({
+  stockItems,
+  currentPage,
+  pageSize,
+  totalItems,
 }: StockTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,10 +62,10 @@ export function StockTable({
               <TableHead>Stok Tersedia</TableHead>
               <TableHead>Stok Min</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Aksi</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className='text-xs'>
+          <TableBody className="text-xs">
             {stockItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
@@ -73,20 +74,36 @@ export function StockTable({
               </TableRow>
             ) : (
               stockItems.map((item) => {
-                const isLowStock = item.stock <= item.lowStock;
+                const isPreorder = item.product.type === 'PREORDER';
+                const isLowStock = !isPreorder && item.stock <= item.lowStock;
                 return (
-                  <TableRow key={item.id}>
-                    <TableCell className='font-mono'>{item.sku}</TableCell>
+                  <TableRow key={item.id} className={isPreorder ? 'bg-amber-50/40' : ''}>
+                    <TableCell className="font-mono">{item.sku}</TableCell>
                     <TableCell>{item.product.name}</TableCell>
                     <TableCell>{item.name}</TableCell>
                     <TableCell>
-                      <span className={isLowStock ? 'text-red-600 font-bold' : ''}>
-                        {item.stock}
-                      </span>
+                      {isPreorder ? (
+                        <span className="text-amber-600 font-medium">—</span>
+                      ) : (
+                        <span className={isLowStock ? 'text-red-600 font-bold' : ''}>
+                          {item.stock}
+                        </span>
+                      )}
                     </TableCell>
-                    <TableCell>{item.lowStock}</TableCell>
                     <TableCell>
-                      {isLowStock ? (
+                      {isPreorder ? (
+                        <span className="text-amber-500/60">—</span>
+                      ) : (
+                        item.lowStock
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isPreorder ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                          <Clock className="w-3 h-3" />
+                          Pre Order
+                        </span>
+                      ) : isLowStock ? (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           <AlertTriangle className="w-3 h-3 mr-1" />
                           Stok menipis
@@ -98,11 +115,18 @@ export function StockTable({
                       )}
                     </TableCell>
                     <TableCell>
-                      <StockAdjustmentDialog 
-                        variantId={item.id} 
-                        variantName={`${item.product.name} - ${item.name}`} 
-                        currentStock={item.stock} 
-                      />
+                      {isPreorder ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200">
+                          <Clock className="w-3 h-3" />
+                          Pre Order
+                        </span>
+                      ) : (
+                        <StockAdjustmentDialog
+                          variantId={item.id}
+                          variantName={`${item.product.name} - ${item.name}`}
+                          currentStock={item.stock}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -120,9 +144,13 @@ export function StockTable({
           </div>
         ) : (
           stockItems.map((item) => {
-            const isLowStock = item.stock <= item.lowStock;
+            const isPreorder = item.product.type === 'PREORDER';
+            const isLowStock = !isPreorder && item.stock <= item.lowStock;
             return (
-              <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div
+                key={item.id}
+                className={`border rounded-xl p-4 ${isPreorder ? 'bg-amber-50/50 border-amber-200' : 'bg-white border-gray-200'}`}
+              >
                 {/* Header */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
@@ -131,7 +159,12 @@ export function StockTable({
                     <p className="text-xs text-gray-400 font-mono mt-1">SKU: {item.sku}</p>
                   </div>
                   <div className="ml-3 flex-shrink-0">
-                    {isLowStock ? (
+                    {isPreorder ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                        <Clock className="w-3 h-3" />
+                        Pre Order
+                      </span>
+                    ) : isLowStock ? (
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                         <AlertTriangle className="w-3 h-3 mr-1" />
                         Low
@@ -148,22 +181,37 @@ export function StockTable({
                 <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b border-gray-100">
                   <div>
                     <p className="text-xs text-gray-500">Stok Tersedia</p>
-                    <p className={`text-lg font-bold ${isLowStock ? 'text-red-600' : 'text-[#028697]'}`}>
-                      {item.stock}
-                    </p>
+                    {isPreorder ? (
+                      <p className="text-lg font-bold text-amber-500">—</p>
+                    ) : (
+                      <p className={`text-lg font-bold ${isLowStock ? 'text-red-600' : 'text-[#028697]'}`}>
+                        {item.stock}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Stok Minimum</p>
-                    <p className="text-lg font-semibold text-gray-700">{item.lowStock}</p>
+                    {isPreorder ? (
+                      <p className="text-lg font-bold text-amber-500/60">—</p>
+                    ) : (
+                      <p className="text-lg font-semibold text-gray-700">{item.lowStock}</p>
+                    )}
                   </div>
                 </div>
 
                 {/* Action */}
-                <StockAdjustmentDialog 
-                  variantId={item.id} 
-                  variantName={`${item.product.name} - ${item.name}`} 
-                  currentStock={item.stock} 
-                />
+                {isPreorder ? (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-600 font-medium">
+                    <Clock className="w-3.5 h-3.5" />
+                    Produk pre order — stok tidak dilacak
+                  </div>
+                ) : (
+                  <StockAdjustmentDialog
+                    variantId={item.id}
+                    variantName={`${item.product.name} - ${item.name}`}
+                    currentStock={item.stock}
+                  />
+                )}
               </div>
             );
           })

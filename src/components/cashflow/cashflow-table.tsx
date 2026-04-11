@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Pagination } from '@/components/ui/pagination';
 
@@ -73,7 +73,7 @@ export function CashflowTable({
               transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
-                    {new Date(transaction.date).toLocaleDateString()}
+                    {formatDateTime(transaction.date)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -134,11 +134,7 @@ export function CashflowTable({
                         {isIncome ? 'Pemasukan' : 'Pengeluaran'}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {new Date(transaction.date).toLocaleDateString('id-ID', { 
-                          day: 'numeric', 
-                          month: 'short', 
-                          year: 'numeric' 
-                        })}
+                        {formatDateTime(transaction.date)}
                       </p>
                     </div>
                   </div>

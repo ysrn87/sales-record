@@ -284,7 +284,7 @@ export default async function AdminStockPage({
           </CardHeader>
           <CardContent>
             <div className="text-xl md:text-2xl font-bold text-red-600">{stats.lowStockCount}</div>
-            <p className="text-[10px] md:text-xs text-muted-foreground">Butuh penambahan</p>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Butuh pembaruan</p>
           </CardContent>
         </Card>
 

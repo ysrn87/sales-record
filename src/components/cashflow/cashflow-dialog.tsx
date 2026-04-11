@@ -198,17 +198,17 @@ export function CashflowDialog({ mode = 'create', transaction, trigger }: Cashfl
                       `}
                     >
                       <div
-                        className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+                        className={`flex-shrink-0 w-6 h-6 rounded-sm flex items-center justify-center transition-colors
                           ${isActive ? iconBg : 'bg-gray-100'}`}
                       >
                         <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold leading-tight">{label}</p>
-                        <p className="text-[11px] opacity-60 leading-tight mt-0.5">{sublabel}</p>
+                        <p className="text-xs font-semibold leading-tight">{label}</p>
+                        <p className="text-[10px] opacity-60 leading-tight mt-0.5">{sublabel}</p>
                       </div>
                       {isActive && (
-                        <span className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full ${dotClass}`} />
+                        <span className={`absolute top-1.5 left-1.5 w-2 h-2 rounded-full ${dotClass}`} />
                       )}
                     </button>
                   );

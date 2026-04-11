@@ -30,39 +30,46 @@ export async function adjustStockAction(formData: FormData) {
       return { success: false, error: 'Product variant not found' };
     }
 
-    // Calculate new stock
+    const isPreorder = variant.product.type === 'PREORDER';
+
+    // Calculate new stock (only relevant for non-preorder)
     let newStock = variant.stock;
-    if (type === 'IN') {
-      newStock += quantity;
-    } else if (type === 'OUT') {
-      newStock -= quantity;
-      if (newStock < 0) {
-        return { success: false, error: 'Insufficient stock' };
+    if (!isPreorder) {
+      if (type === 'IN') {
+        newStock += quantity;
+      } else if (type === 'OUT') {
+        newStock -= quantity;
+        if (newStock < 0) {
+          return { success: false, error: 'Insufficient stock' };
+        }
+      } else if (type === 'ADJUSTMENT') {
+        newStock = quantity;
       }
-    } else if (type === 'ADJUSTMENT') {
-      newStock = quantity;
     }
 
     // Update stock and create movement record with cashflow
     await db.$transaction(async (tx) => {
-      await tx.productVariant.update({
-        where: { id: variantId },
-        data: { stock: newStock },
-      });
+      // Skip stock update and movement for preorder products
+      if (!isPreorder) {
+        await tx.productVariant.update({
+          where: { id: variantId },
+          data: { stock: newStock },
+        });
 
-      await tx.stockMovement.create({
-        data: {
-          variantId,
-          type,
-          quantity,
-          notes,
-        },
-      });
+        await tx.stockMovement.create({
+          data: {
+            variantId,
+            type,
+            quantity,
+            notes,
+          },
+        });
+      }
 
-      // Create cashflow entry for stock IN (purchasing inventory)
-      if (type === 'IN' && quantity > 0) {
+      // Create cashflow entry for stock IN (purchasing inventory) — only for non-preorder
+      if (!isPreorder && type === 'IN' && quantity > 0) {
         const totalCost = Number(variant.cost) * quantity;
-        
+
         await tx.cashflow.create({
           data: {
             type: 'EXPENSE',

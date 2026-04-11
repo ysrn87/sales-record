@@ -25,15 +25,15 @@ const TYPE_OPTIONS = [
     value: 'READY_STOCK' as const,
     icon: Package,
     label: 'Ready Stock',
-    sublabel: 'Stok tersedia langsung',
+    sublabel: 'Produk jadi',
     activeClass: 'border-[#028697] bg-gradient-to-br from-[#028697]/8 to-[#028697]/4 text-[#028697]',
     dotClass: 'bg-[#028697]',
   },
   {
     value: 'PREORDER' as const,
     icon: Clock,
-    label: 'Pre Order',
-    sublabel: 'Dibuat setelah order',
+    label: 'Pre-Order',
+    sublabel: 'Produk tunda',
     activeClass: 'border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700',
     dotClass: 'bg-amber-500',
   },
@@ -157,7 +157,7 @@ export function ProductDialog({ mode, product, trigger }: ProductDialogProps) {
                       onClick={() => setProductType(value)}
                       disabled={loading}
                       className={`
-                        relative flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left
+                        relative flex items-center gap-3 rounded-xl border-2 px-3 py-3 text-left
                         transition-all duration-200 disabled:opacity-50
                         ${isActive ? activeClass : 'border-gray-100 bg-gray-50/60 text-gray-500 hover:border-gray-200 hover:bg-gray-50'}
                       `}
@@ -173,11 +173,11 @@ export function ProductDialog({ mode, product, trigger }: ProductDialogProps) {
                         />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold leading-tight">{label}</p>
-                        <p className="text-[11px] opacity-60 leading-tight mt-0.5">{sublabel}</p>
+                        <p className="text-xs font-semibold leading-tight">{label}</p>
+                        <p className="text-[10px] opacity-60 leading-tight mt-0.5">{sublabel}</p>
                       </div>
                       {isActive && (
-                        <span className={`absolute top-2.5 right-2.5 w-2 h-2 rounded-full ${dotClass}`} />
+                        <span className={`absolute top-1.5 left-1.5 w-2 h-2 rounded-full ${dotClass}`} />
                       )}
                     </button>
                   );
