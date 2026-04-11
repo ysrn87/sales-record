@@ -199,6 +199,18 @@ async function getCustomers() {
   });
 }
 
+async function getNonMemberCustomers() {
+  return db.customer.findMany({
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      address: true,
+    },
+    orderBy: { name: 'asc' },
+  });
+}
+
 export default async function AdminSalesPage({
   searchParams,
 }: {
@@ -219,10 +231,11 @@ export default async function AdminSalesPage({
   const paymentStatus = params.paymentStatus || 'all';
   const sort = params.sort || 'date_desc';
 
-  const [{ sales, total }, variants, customers, conversionRate, session] = await Promise.all([
+  const [{ sales, total }, variants, customers, nonMemberCustomers, conversionRate, session] = await Promise.all([
     getSales({ page, limit, search, payment, paymentStatus, sort }),
     getVariants(),
     getCustomers(),
+    getNonMemberCustomers(),
     getPointsConversionRate(),
     auth(),
   ]);
@@ -234,7 +247,7 @@ export default async function AdminSalesPage({
       <div className="flex justify-between items-center">
         {/* Desktop button — hidden on mobile */}
         <div className="hidden sm:block">
-          <NewSaleDialog variants={variants} customers={customers} conversionRate={conversionRate} />
+          <NewSaleDialog variants={variants} customers={customers} nonMemberCustomers={nonMemberCustomers} conversionRate={conversionRate} />
         </div>
       </div>
 
@@ -243,6 +256,7 @@ export default async function AdminSalesPage({
         <NewSaleDialog
           variants={variants}
           customers={customers}
+          nonMemberCustomers={nonMemberCustomers}
           conversionRate={conversionRate}
           trigger={
             <button className="w-12 h-12 rounded-full bg-[#028697] text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all">
