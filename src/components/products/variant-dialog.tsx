@@ -218,13 +218,13 @@ export function VariantDialog({ mode, productId, productSku, variantCount = 0, i
             </div>
             <DialogHeader className="space-y-0.5 text-left p-0">
               <DialogTitle className="text-white text-lg font-semibold leading-tight">
-                {isCreate ? 'Varian Baru' : 'Edit Varian'}
+                {isCreate ? `Varian Baru` : 'Edit Varian'}
               </DialogTitle>
               <p className="text-white/65 text-xs font-normal">
                 {isCreate
                   ? isPreorder
-                    ? 'Tambah varian — produk pre order, stok tidak dilacak'
-                    : 'Tentukan harga, stok awal, dan poin reward'
+                    ? `Tentukan harga dan poin reward`
+                    : 'Tentukan harga, stok awal, dan poin'
                   : `Mengedit: ${variant?.name}`}
               </p>
             </DialogHeader>
@@ -260,7 +260,7 @@ export function VariantDialog({ mode, productId, productSku, variantCount = 0, i
                 />
               </div>
               <div>
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between">
                   <FieldLabel label="Kode SKU" required />
                   {isCreate && productSku && (
                     <button
@@ -268,7 +268,7 @@ export function VariantDialog({ mode, productId, productSku, variantCount = 0, i
                       onClick={() => setSkuOverride((v) => !v)}
                       className="text-[10px] text-[#028697] hover:underline shrink-0 -mt-1.5"
                     >
-                      {skuOverride ? 'Gunakan Auto' : 'Custom'}
+                      {skuOverride ? 'Auto' : 'Custom'}
                     </button>
                   )}
                 </div>

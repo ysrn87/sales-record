@@ -760,9 +760,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Metode</Label>
+                    <Label className="text-xs text-gray-500 font-medium">Metode</Label>
                     <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg focus:ring-[#028697]/30 focus:border-[#028697]">
+                      <SelectTrigger className="h-9 text-xs text-left border-gray-200 rounded-lg focus:ring-[#028697]/30 focus:border-[#028697]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -773,9 +773,9 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     </Select>
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Status</Label>
+                    <Label className="text-xs text-gray-500 font-medium">Status</Label>
                     <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v as PaymentStatus)}>
-                      <SelectTrigger className="h-9 text-sm border-gray-200 rounded-lg focus:ring-[#028697]/30 focus:border-[#028697]">
+                      <SelectTrigger className="h-9 text-xs text-left border-gray-200 rounded-lg focus:ring-[#028697]/30 focus:border-[#028697]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -789,7 +789,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Diskon</Label>
+                    <Label className="text-xs text-gray-500 font-medium">Diskon</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
@@ -805,7 +805,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Pajak</Label>
+                    <Label className="text-xs text-gray-500 font-medium">Pajak</Label>
                     <Input
                       type="text"
                       inputMode="numeric"
@@ -821,7 +821,7 @@ export function NewSaleDialog({ variants, customers, nonMemberCustomers = [], co
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs text-gray-500 font-semibold uppercase tracking-widest">Ongkir</Label>
+                    <Label className="text-xs text-gray-500 font-medium">Ongkir</Label>
                     <Input
                       type="text"
                       inputMode="numeric"

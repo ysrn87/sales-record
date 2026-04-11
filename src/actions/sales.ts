@@ -78,8 +78,8 @@ export async function createSaleAction(input: CreateSaleInput) {
         return { success: false, error: `Insufficient stock for ${variant.name}` };
       }
 
-      // Calculate points from variant points (only for members and if NOT redeeming points)
-      if (customerId && pointsRedeemed === 0) {
+      // Calculate points from variant points (only for members, if NOT redeeming points, and only for PAID sales)
+      if (customerId && pointsRedeemed === 0 && paymentStatus === 'PAID') {
         pointsEarned += variant.points * item.quantity;
       }
     }
@@ -125,7 +125,7 @@ export async function createSaleAction(input: CreateSaleInput) {
           paymentMethod,
           paymentStatus: paymentStatus as PaymentStatus,
           notes,
-          pointsEarned: customerId && pointsRedeemed === 0 ? pointsEarned : 0,
+          pointsEarned: customerId && pointsRedeemed === 0 && paymentStatus === 'PAID' ? pointsEarned : 0,
           pointsRedeemed: customerId ? pointsRedeemed : 0,
           items: {
             create: items.map((item) => ({
@@ -319,8 +319,8 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
     // Validate stock availability for new quantities and calculate points
     let pointsEarned = 0;
 
-    // Only calculate earned points if original sale didn't redeem points
-    const shouldEarnPoints = Number(originalSale.pointsRedeemed) === 0;
+    // Only calculate earned points if original sale didn't redeem points AND new status is PAID
+    const shouldEarnPoints = Number(originalSale.pointsRedeemed) === 0 && paymentStatus === 'PAID';
 
     for (const item of items) {
       const variant = await db.productVariant.findUnique({
@@ -397,7 +397,7 @@ export async function updateSaleAction(id: string, input: CreateSaleInput) {
           paymentMethod,
           paymentStatus: paymentStatus as PaymentStatus,
           notes,
-          pointsEarned: customerId ? pointsEarned : 0,
+          pointsEarned: customerId && paymentStatus === 'PAID' ? pointsEarned : 0,
           pointsRedeemed: pointsRedeemed,
           items: {
             create: items.map((item) => ({
